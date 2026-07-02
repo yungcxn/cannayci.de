@@ -12,6 +12,7 @@ http {
     types_hash_max_size 2048;
 
     include /etc/nginx/mime.types;
+    include /etc/nginx/fastcgi.conf;
     default_type application/octet-stream;
 
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -39,7 +40,7 @@ http {
         location ~ \.ct$ {
             gzip off;
             fastcgi_pass unix:/var/run/fcgiwrap.socket;
-            include fastcgi_params;
+            include /etc/nginx/fastcgi_params;
             fastcgi_param SCRIPT_FILENAME {{ ct2html_cgi_path }};
             fastcgi_param CT_FILE $document_root$uri;
         }
