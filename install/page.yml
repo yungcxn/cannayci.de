@@ -5,7 +5,7 @@
   vars_files:
     - vars.yml
   vars:
-    pageroot_dir: "{{ playbook_dir }}/pageroot"
+    pageroot_dir: "{{ playbook_dir }}/../pageroot"
     ct2html_release_url: "https://github.com/yungcxn/ct2html/releases/latest/download/ct2html-ReleaseSafe.tar.gz"
 
   tasks:
