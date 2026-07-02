@@ -7,6 +7,8 @@
   vars:
     pageroot_dir: "{{ playbook_dir }}/../pageroot"
     ct2html_release_url: "https://github.com/yungcxn/ct2html/releases/latest/download/ct2html-ReleaseSafe.tar.gz"
+    ct2html_api_url: "https://api.github.com/repos/yungcxn/ct2html/releases/latest"
+    ct2html_version_file: /opt/ct2html/.release_tag
 
   tasks:
 
@@ -20,23 +22,69 @@
         group: root
         mode: '0755'
 
+    - name: Query GitHub for the latest ct2html release
+      uri:
+        url: "{{ ct2html_api_url }}"
+        return_content: true
+        headers:
+          Accept: "application/vnd.github+json"
+      register: ct2html_latest_release
+      delegate_to: localhost
+      become: false
+      run_once: true
+
+    - name: Set fact for latest available release tag
+      set_fact:
+        ct2html_latest_tag: "{{ ct2html_latest_release.json.tag_name }}"
+
+    - name: Check whether a release tag is already recorded on the host
+      stat:
+        path: "{{ ct2html_version_file }}"
+      register: ct2html_version_file_stat
+
+    - name: Read the currently installed release tag, if any
+      slurp:
+        src: "{{ ct2html_version_file }}"
+      register: ct2html_installed_tag_raw
+      when: ct2html_version_file_stat.stat.exists
+
+    - name: Set fact for currently installed release tag
+      set_fact:
+        ct2html_installed_tag: >-
+          {{ (ct2html_installed_tag_raw.content | b64decode | trim)
+             if ct2html_version_file_stat.stat.exists else '' }}
+
+    - name: Determine whether ct2html needs to be (re)installed
+      set_fact:
+        ct2html_needs_update: "{{ ct2html_installed_tag != ct2html_latest_tag }}"
+
+    - name: Report ct2html version check
+      debug:
+        msg: >-
+          Installed tag: '{{ ct2html_installed_tag }}',
+          latest tag: '{{ ct2html_latest_tag }}'.
+          {{ 'Will reinstall.' if ct2html_needs_update else 'Already up to date, skipping download.' }}
+
     - name: Create temporary directory for ct2html download
       tempfile:
         state: directory
         suffix: ct2html
       register: ct2html_tmp
+      when: ct2html_needs_update
 
     - name: Download latest ct2html release tarball
       get_url:
         url: "{{ ct2html_release_url }}"
         dest: "{{ ct2html_tmp.path }}/ct2html-ReleaseSafe.tar.gz"
         mode: '0644'
+      when: ct2html_needs_update
 
     - name: Extract ct2html tarball
       unarchive:
         src: "{{ ct2html_tmp.path }}/ct2html-ReleaseSafe.tar.gz"
         dest: "{{ ct2html_tmp.path }}"
         remote_src: true
+      when: ct2html_needs_update
 
     - name: Locate the extracted ct2html executable
       find:
@@ -44,6 +92,7 @@
         file_type: file
         excludes: "*.tar.gz"
       register: ct2html_extracted
+      when: ct2html_needs_update
 
     - name: Fail if the archive layout is not what we expect
       assert:
@@ -54,6 +103,7 @@
           found {{ ct2html_extracted.matched }}. The release layout may
           have changed — check {{ ct2html_tmp.path }} manually.
         success_msg: "Found single ct2html binary candidate in archive"
+      when: ct2html_needs_update
 
     - name: Install ct2html binary to /opt/ct2html/ct2html
       copy:
@@ -63,11 +113,22 @@
         owner: root
         group: root
         mode: '0755'
+      when: ct2html_needs_update
+
+    - name: Record the installed release tag
+      copy:
+        content: "{{ ct2html_latest_tag }}"
+        dest: "{{ ct2html_version_file }}"
+        owner: root
+        group: root
+        mode: '0644'
+      when: ct2html_needs_update
 
     - name: Clean up temporary download directory
       file:
         path: "{{ ct2html_tmp.path }}"
         state: absent
+      when: ct2html_needs_update
 
     - name: Deploy ct2html CGI wrapper script
       copy:
@@ -80,7 +141,8 @@
           echo "Content-Type: text/html"
           echo ""
           PATH=$(dirname "$(readlink -f "$0")")
-          $PATH/../ct2html -i "$CT_FILE" --htmlerror
+          $PATH/ct2html -i "$CT_FILE" --htmlerror
+      when: ct2html_needs_update
 
 
     # Page files

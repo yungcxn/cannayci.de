@@ -35,6 +35,7 @@
         dest: "/var/www/{{ domain }}/default.ct"
         content: |
           # Hi
+          
           Everything is working! This is a placeholder, compiled by `ct2html`.
         owner: www-data
         group: www-data
