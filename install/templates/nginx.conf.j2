@@ -72,7 +72,7 @@ http {
         }
 
         location / {
-            try_files $uri $uri/ /default.ct /main.ct =404;
+            try_files $uri $uri/ /main.ct /default.ct =404;
         }
 
         location ~ \.ct$ {
