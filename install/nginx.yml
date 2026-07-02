@@ -1,0 +1,112 @@
+---
+- name: Install and configure nginx + certbot
+  hosts: web
+  become: true
+  vars_files:
+    - vars.yml
+  vars:
+    manage_firewall: true
+    ansible_user: "{{ ssh_user }}"
+    ansible_ssh_private_key_file: "{{ ssh_key_path }}"
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install nginx, certbot, ufw and fcgiwrap
+      apt:
+        name:
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+          - ufw
+          - fcgiwrap
+        state: present
+
+    - name: Create web root for this domain
+      file:
+        path: "/var/www/{{ domain }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+
+    - name: Deploy a placeholder default.ct
+      copy:
+        dest: "/var/www/{{ domain }}/default.ct"
+        content: |
+          # Hi
+          Everything is working! This is a placeholder, compiled by `ct2html`.
+        owner: www-data
+        group: www-data
+        mode: '0644'
+        force: false
+
+    - name: Deploy nginx.conf
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: '0644'
+        validate: 'nginx -t -c %s'
+      notify: reload nginx
+
+    - name: Ensure nginx is enabled and running
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Ensure fcgiwrap socket is enabled and running
+      systemd:
+        name: fcgiwrap.socket
+        state: started
+        enabled: true
+
+    - name: Allow OpenSSH through ufw
+      ufw:
+        rule: allow
+        name: OpenSSH
+      when: manage_firewall
+
+    - name: Allow Nginx Full (80/443) through ufw
+      ufw:
+        rule: allow
+        name: 'Nginx Full'
+      when: manage_firewall
+
+    - name: Enable ufw with default deny
+      ufw:
+        state: enabled
+        policy: deny
+      when: manage_firewall
+
+    - name: Refuse to run certbot against a bare IP address
+      assert:
+        that:
+          - domain != ""
+          - domain is not match('^[0-9]{1,3}(\.[0-9]{1,3}){3}$')
+        fail_msg: >-
+          DOMAIN resolves to '{{ domain }}', which looks like an IP
+          address (or is empty). Let's Encrypt only issues certificates
+          for real domain names... set EXPLICIT_DOMAIN in .env to a
+          hostname that has a DNS A/AAAA record pointing at this server.
+        success_msg: "domain '{{ domain }}' looks valid, proceeding with certbot"
+      when: certbot_email != ""
+
+    - name: Obtain Let's Encrypt certificate
+      command: >
+        certbot --nginx -n --agree-tos --redirect
+        -m {{ certbot_email }}
+        -d {{ domain }}
+      when: certbot_email != ""
+      register: certbot_result
+      changed_when: "'Congratulations' in certbot_result.stdout"
+
+  handlers:
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded

@@ -1,0 +1,69 @@
+---
+- name: Bootstrap a sudo user + matching SSH key for a fresh host
+  hosts: web
+  become: false
+  gather_facts: true
+
+  tasks:
+    - name: Ensure local SSH key directory exists
+      delegate_to: localhost
+      become: false
+      file:
+        path: "{{ ssh_key_dir }}"
+        state: directory
+        mode: '0700'
+
+    - name: Generate the keypair for this (user, host) pair
+      delegate_to: localhost
+      become: false
+      command: >
+        ssh-keygen -t ed25519 -f {{ ssh_key_path }} -N "" -C {{ ssh_user }}@{{ inventory_hostname }}
+      args:
+        creates: "{{ ssh_key_path }}"
+
+    - name: Ensure sudo is installed
+      apt:
+        name: sudo
+        state: present
+        update_cache: true
+
+    - name: Create the user
+      user:
+        name: "{{ ssh_user }}"
+        shell: /bin/bash
+        groups: sudo
+        append: true
+        create_home: true
+
+    - name: Authorize the generated key for the new user
+      authorized_key:
+        user: "{{ ssh_user }}"
+        key: "{{ lookup('file', ssh_key_path + '.pub') }}"
+        state: present
+
+    - name: Allow passwordless sudo for the new user
+      copy:
+        dest: "/etc/sudoers.d/{{ ssh_user }}"
+        content: "{{ ssh_user }} ALL=(ALL) NOPASSWD:ALL\n"
+        mode: '0440'
+        validate: 'visudo -cf %s'
+
+    - name: Disable SSH password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?\s*PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+      notify: restart ssh
+
+    - name: Disable root SSH login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?\s*PermitRootLogin'
+        line: 'PermitRootLogin no'
+      notify: restart ssh
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted
