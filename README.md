@@ -5,7 +5,7 @@
 This repo consists of:
 - `install/`: Ansible installation of `certbot`, `nginx` and belonging configurations
 - `pageroot/`: The pages root, starting with `pageroot/main.ct` - the so-called "index-page"
-- `.github/workflows/nginx.yml`: Executing Ansible in manual pipeline to do the setup on a fresh VM
+- `.github/workflows/deploy-nginx.yml`: Executing Ansible in manual pipeline to do the setup on a fresh VM
 - `.github/workflows/install-page.yml`: Executing Ansible in per-commit pipeline to copy-on-commit page files into `/var/www/cannayci.de/` on the VM and install `ct2html` and the fastcgi helper into `/opt/ct2html`.
 
 Usage does not need a description; look into the CI files.
