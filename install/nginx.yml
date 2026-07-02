@@ -1,4 +1,3 @@
----
 - name: Install and configure nginx + certbot
   hosts: web
   become: true
@@ -6,19 +5,21 @@
     - vars.yml
   vars:
     manage_firewall: true
+
   tasks:
     - name: Update apt cache
       apt:
         update_cache: true
         cache_valid_time: 3600
 
-    - name: Install nginx, certbot, ufw and fcgiwrap
+    - name: Install nginx, certbot, ufw, fail2ban and fcgiwrap
       apt:
         name:
           - nginx
           - certbot
           - python3-certbot-nginx
           - ufw
+          - fail2ban
           - fcgiwrap
         state: present
 
@@ -64,22 +65,44 @@
         state: started
         enabled: true
 
-    - name: Allow OpenSSH through ufw
+    - name: Ensure fail2ban is enabled and running
+      service:
+        name: fail2ban
+        state: started
+        enabled: true
+
+    - name: Set kernel-level SYN flood protections
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        sysctl_set: true
+        state: present
+        reload: true
+      loop:
+        - { name: net.ipv4.tcp_syncookies, value: '1' }
+        - { name: net.ipv4.tcp_max_syn_backlog, value: '2048' }
+        - { name: net.ipv4.tcp_synack_retries, value: '2' }
+        - { name: net.ipv4.tcp_fin_timeout, value: '15' }
+
+    - name: Allow rate-limited OpenSSH through ufw
       ufw:
-        rule: allow
+        rule: limit
         name: OpenSSH
+        direction: in
       when: manage_firewall
 
     - name: Allow Nginx Full (80/443) through ufw
       ufw:
         rule: allow
         name: 'Nginx Full'
+        direction: in
       when: manage_firewall
 
-    - name: Enable ufw with default deny
+    - name: Enable ufw with default deny incoming
       ufw:
         state: enabled
         policy: deny
+        direction: incoming
       when: manage_firewall
 
     - name: Refuse to run certbot against a bare IP address
@@ -88,18 +111,15 @@
           - domain != ""
           - domain is not match('^[0-9]{1,3}(\.[0-9]{1,3}){3}$')
         fail_msg: >-
-          DOMAIN resolves to '{{ domain }}', which looks like an IP
-          address (or is empty). Let's Encrypt only issues certificates
-          for real domain names... set EXPLICIT_DOMAIN in .env to a
-          hostname that has a DNS A/AAAA record pointing at this server.
+          DOMAIN resolves to '{{ domain }}', which looks like an IP address (or is empty).
+          Let's Encrypt only issues certificates for real domain names...
+          set EXPLICIT_DOMAIN in .env to a hostname that has a DNS A/AAAA record pointing at this server.
         success_msg: "domain '{{ domain }}' looks valid, proceeding with certbot"
       when: certbot_email != ""
 
     - name: Obtain Let's Encrypt certificate
       command: >
-        certbot --nginx -n --agree-tos --redirect
-        -m {{ certbot_email }}
-        -d {{ domain }}
+        certbot --nginx -n --agree-tos --redirect -m {{ certbot_email }} -d {{ domain }}
       when: certbot_email != ""
       register: certbot_result
       changed_when: "'Congratulations' in certbot_result.stdout"
