@@ -4,9 +4,10 @@ Goal is to have modularity for easy reusability.
 
 ## Usage:
 
+You need the private key of the `ansible` user. Then:
+
 ```bash
 set -a; source .env; set +a # for local testing, for pipeline: set CI vars :)
-# ansible-playbook tools/bootstrap_user.yml -u root --ask-pass  # for first time
 ansible-playbook -i inventory.ini install.yml
 ansible-playbook -i inventory.ini page.yml
 ```

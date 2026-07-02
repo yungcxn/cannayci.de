@@ -1,0 +1,19 @@
+name: Install Page
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dawidd6/action-ansible-playbook@v9
+        with:
+          playbook: page.yml
+          directory: install
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          options: |
+            --inventory inventory.ini

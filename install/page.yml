@@ -5,8 +5,6 @@
   vars_files:
     - vars.yml
   vars:
-    ansible_user: "{{ ssh_user }}"
-    ansible_ssh_private_key_file: "{{ ssh_key_path }}"
     pageroot_dir: "{{ playbook_dir }}/pageroot"
     ct2html_release_url: "https://github.com/yungcxn/ct2html/releases/latest/download/ct2html-ReleaseSafe.tar.gz"
 
