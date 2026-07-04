@@ -1,4 +1,4 @@
-# [cannayci.de](https://can.nayci.de)
+# [cannayci.de](https://cannayci.de)
 
 ![Full architecture overview](docs/img/architecture.jpeg)
 
