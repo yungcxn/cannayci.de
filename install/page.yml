@@ -8,7 +8,7 @@
     pageroot_dir: "{{ playbook_dir }}/../pageroot"
     ct2html_release_url: "https://github.com/yungcxn/ct2html/releases/latest/download/ct2html-ReleaseSafe.tar.gz"
     ct2html_api_url: "https://api.github.com/repos/yungcxn/ct2html/releases/latest"
-    ct2html_version_file: /tmp/ct2html/.release_tag
+    ct2html_version_file: /usr/local/share/ct2html/release_tag
 
   tasks:
 
@@ -107,6 +107,15 @@
         mode: '0755'
       when: ct2html_needs_update
 
+    - name: Ensure version directory exists
+      file:
+        path: "{{ ct2html_version_file | dirname }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      when: ct2html_needs_update
+
     - name: Record the installed release tag
       copy:
         content: "{{ ct2html_latest_tag }}"
@@ -124,7 +133,12 @@
 
     # Page files
 
-    - name: Ensure web root exists for this domain
+    - name: Wipe existing files in web root
+      file:
+        path: "/var/www/{{ domain }}"
+        state: absent
+
+    - name: Recreate web root
       file:
         path: "/var/www/{{ domain }}"
         state: directory
@@ -132,12 +146,7 @@
         group: www-data
         mode: '0755'
 
-    - name: Wipe existing files in web root for clean deployment
-      file:
-        path: "/var/www/{{ domain }}"
-        state: absent
-
-    - name: Deploy page files to web root
+    - name: Deploy page files
       copy:
         src: "{{ pageroot_dir }}/"
         dest: "/var/www/{{ domain }}/"
