@@ -66,21 +66,27 @@ http {
             deny all;
             return 404;
         }
+
         location ~ (^|/)_ {
             deny all;
             return 404;
         }
-
+        
         location ~ ~$ {
             deny all;
         }
 
         location = / {
-            try_files /default.ct /main.ct =404;
+            if (-f $document_root/default.ct) {
+                rewrite ^ /default.ct last;
+            }
+            rewrite ^ /main.ct last;
         }
 
         location ~ \.ct$ {
-            try_files $uri =404;
+            if (!-f $document_root$uri) {
+                return 404;
+            }
             default_type text/html;
             limit_req zone=req_cgi burst=10 nodelay;
             gzip off;
