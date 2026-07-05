@@ -54,7 +54,6 @@ http {
         server_name {{ domain }};
 
         root /var/www/{{ domain }};
-        index default.ct main.ct;
 
         limit_req zone=req_general burst=20 nodelay;
         limit_conn conn_general 20;
@@ -63,27 +62,40 @@ http {
         add_header X-Frame-Options DENY always;
         add_header Referrer-Policy strict-origin-when-cross-origin always;
 
-        location ~ /\. {
+        location ~ (^|/)\. {
             deny all;
+            return 404;
+        }
+        location ~ (^|/)_ {
+            deny all;
+            return 404;
         }
 
         location ~ ~$ {
             deny all;
         }
 
-        location / {
-            try_files $uri $uri/ /main.ct /default.ct =404;
+        location = / {
+            try_files /default.ct /main.ct =404;
         }
 
         location ~ \.ct$ {
+            try_files $uri =404;
+            default_type text/html;
             limit_req zone=req_cgi burst=10 nodelay;
             gzip off;
             fastcgi_pass unix:/var/run/fcgiwrap.socket;
             include /etc/nginx/fastcgi_params;
+            fastcgi_param LANG en_US.UTF-8;
+            fastcgi_param LC_ALL en_US.UTF-8;
             fastcgi_param SCRIPT_FILENAME {{ ct2html_cgi_path }};
             fastcgi_param CT_FILE $document_root$uri;
             fastcgi_read_timeout 10s;
             fastcgi_send_timeout 10s;
+        }
+
+        location / {
+            return 404;
         }
     }
 }
