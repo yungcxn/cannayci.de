@@ -71,7 +71,7 @@ http {
             deny all;
             return 404;
         }
-        
+
         location ~ ~$ {
             deny all;
         }
@@ -88,14 +88,27 @@ http {
                 return 404;
             }
             default_type text/html;
+            charset utf-8;
+
+            add_header Content-Security-Policy "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'" always;
+            add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+            add_header Cache-Control "no-store" always;
+            add_header Cross-Origin-Opener-Policy same-origin always;
+            add_header Cross-Origin-Resource-Policy same-origin always;
+
             limit_req zone=req_cgi burst=10 nodelay;
             gzip off;
+
             fastcgi_pass unix:/var/run/fcgiwrap.socket;
             include /etc/nginx/fastcgi_params;
+
             fastcgi_param LANG en_US.UTF-8;
             fastcgi_param LC_ALL en_US.UTF-8;
-            fastcgi_param SCRIPT_FILENAME {{ ct2html_cgi_path }};
-            fastcgi_param CT_FILE $document_root$uri;
+
+            fastcgi_param SCRIPT_FILENAME /bin/ct2html;
+            fastcgi_param CT2HTML_IN  $uri;
+            fastcgi_param CT2HTML_CWD $document_root;
+            fastcgi_param CT2HTML_HTMLERROR true;
             fastcgi_read_timeout 10s;
             fastcgi_send_timeout 10s;
         }

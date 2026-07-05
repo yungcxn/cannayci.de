@@ -8,19 +8,11 @@
     pageroot_dir: "{{ playbook_dir }}/../pageroot"
     ct2html_release_url: "https://github.com/yungcxn/ct2html/releases/latest/download/ct2html-ReleaseSafe.tar.gz"
     ct2html_api_url: "https://api.github.com/repos/yungcxn/ct2html/releases/latest"
-    ct2html_version_file: /opt/ct2html/.release_tag
+    ct2html_version_file: /tmp/ct2html/.release_tag
 
   tasks:
 
     # ct2html binary
-
-    - name: Ensure /opt/ct2html directory exists
-      file:
-        path: /opt/ct2html
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
 
     - name: Query GitHub for the latest ct2html release
       uri:
@@ -105,10 +97,10 @@
         success_msg: "Found single ct2html binary candidate in archive"
       when: ct2html_needs_update
 
-    - name: Install ct2html binary to /opt/ct2html/ct2html
+    - name: Install ct2html binary to /bin/ct2html
       copy:
         src: "{{ ct2html_extracted.files[0].path }}"
-        dest: /opt/ct2html/ct2html
+        dest: /bin/ct2html
         remote_src: true
         owner: root
         group: root
@@ -129,21 +121,6 @@
         path: "{{ ct2html_tmp.path }}"
         state: absent
       when: ct2html_needs_update
-
-    - name: Deploy ct2html CGI wrapper script
-      copy:
-        dest: /opt/ct2html/ct2html-cgi
-        owner: root
-        group: root
-        mode: '0755'
-        content: |
-          #!/bin/bash
-          echo "Content-Type: text/html"
-          echo ""
-          PATH=$(dirname "$(readlink -f "$0")")
-          $PATH/ct2html -i "$CT_FILE" -c "/var/www/{{ domain }}" --htmlerror
-      when: ct2html_needs_update
-
 
     # Page files
 
@@ -168,12 +145,10 @@
         group: www-data
         mode: preserve
 
-
     # Verification
-
     - name: Stat the ct2html binary
       stat:
-        path: /opt/ct2html/ct2html
+        path: /bin/ct2html
       register: ct2html_bin_stat
 
     - name: Assert ct2html binary exists and is executable
@@ -181,11 +156,11 @@
         that:
           - ct2html_bin_stat.stat.exists
           - ct2html_bin_stat.stat.executable
-        fail_msg: "/opt/ct2html/ct2html is missing or not executable"
+        fail_msg: "/bin/ct2html is missing or not executable"
         success_msg: "ct2html binary present and executable"
 
     - name: Sanity-run ct2html binary
-      command: /opt/ct2html/ct2html --help
+      command: /bin/ct2html --help
       register: ct2html_run_check
       changed_when: false
       failed_when: false
@@ -198,23 +173,6 @@
           is broken/wrong-arch; any other rc (even non-zero, e.g. from
           an unrecognised flag) means the binary itself runs fine.
       failed_when: ct2html_run_check.rc == 127 or 'exec format error' in ct2html_run_check.stderr
-
-    - name: Stat the ct2html-cgi wrapper
-      stat:
-        path: /opt/ct2html/ct2html-cgi
-      register: ct2html_cgi_stat
-
-    - name: Assert ct2html-cgi exists and is executable
-      assert:
-        that:
-          - ct2html_cgi_stat.stat.exists
-          - ct2html_cgi_stat.stat.executable
-        fail_msg: "/opt/ct2html/ct2html-cgi is missing or not executable"
-        success_msg: "ct2html-cgi wrapper present and executable"
-
-    - name: Check ct2html-cgi bash syntax
-      command: bash -n /opt/ct2html/ct2html-cgi
-      changed_when: false
 
     - name: Find deployed page files
       find:
