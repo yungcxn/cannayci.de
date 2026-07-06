@@ -13,8 +13,6 @@
     ct2html_service_name: ct2html
     ct2html_run_user: www-data
     ct2html_run_group: www-data
-    ct2html_listen_host: "127.0.0.1"
-    ct2html_listen_port: 8080
     ct2html_extra_args: ""
 
   handlers:

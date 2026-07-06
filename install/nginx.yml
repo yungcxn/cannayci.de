@@ -5,6 +5,8 @@
     - vars.yml
   vars:
     manage_firewall: true
+    ct2html_listen_host: "127.0.0.1"
+    ct2html_listen_port: 8080
 
   tasks:
     - name: Update apt cache
