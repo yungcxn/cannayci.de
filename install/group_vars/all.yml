@@ -1,10 +1,4 @@
 ---
 certbot_email: "{{ lookup('env', 'CERTBOT_EMAIL') | default('', true) }}"
 
-### should not touch in general ####################################################################
-
-# only to set if inventory_hostname is not a resolvable DNS name
 domain: "{{ lookup('env', 'EXPLICIT_DOMAIN') | default(inventory_hostname, true) }}"
-ct2html_cgi_path: "{{ lookup('env', 'CT2HTML_CGI_PATH') | default('/opt/ct2html/ct2html-cgi', true) }}"
-
-####################################################################################################

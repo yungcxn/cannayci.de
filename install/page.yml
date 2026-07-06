@@ -1,5 +1,5 @@
 ---
-- name: Install ct2html and deploy page files
+- name: Install ct2html and run it as the web server via systemd
   hosts: web
   become: true
   vars_files:
@@ -9,6 +9,26 @@
     ct2html_release_url: "https://github.com/yungcxn/ct2html/releases/latest/download/ct2html-ReleaseSafe.tar.gz"
     ct2html_api_url: "https://api.github.com/repos/yungcxn/ct2html/releases/latest"
     ct2html_version_file: /usr/local/share/ct2html/release_tag
+    ct2html_webroot: "/var/www/{{ domain }}"
+    ct2html_service_name: ct2html
+    ct2html_run_user: www-data
+    ct2html_run_group: www-data
+    ct2html_listen_host: "127.0.0.1"
+    ct2html_listen_port: 8080
+    ct2html_extra_args: ""
+
+  handlers:
+
+    - name: Reload systemd
+      systemd:
+        daemon_reload: true
+      listen: "reload systemd"
+
+    - name: Restart ct2html service
+      systemd:
+        name: "{{ ct2html_service_name }}"
+        state: restarted
+      listen: "restart ct2html"
 
   tasks:
 
@@ -106,6 +126,7 @@
         group: root
         mode: '0755'
       when: ct2html_needs_update
+      notify: "restart ct2html"
 
     - name: Ensure version directory exists
       file:
@@ -135,26 +156,66 @@
 
     - name: Wipe existing files in web root
       file:
-        path: "/var/www/{{ domain }}"
+        path: "{{ ct2html_webroot }}"
         state: absent
 
     - name: Recreate web root
       file:
-        path: "/var/www/{{ domain }}"
+        path: "{{ ct2html_webroot }}"
         state: directory
-        owner: www-data
-        group: www-data
+        owner: "{{ ct2html_run_user }}"
+        group: "{{ ct2html_run_group }}"
         mode: '0755'
 
     - name: Deploy page files
       copy:
         src: "{{ pageroot_dir }}/"
-        dest: "/var/www/{{ domain }}/"
-        owner: www-data
-        group: www-data
+        dest: "{{ ct2html_webroot }}/"
+        owner: "{{ ct2html_run_user }}"
+        group: "{{ ct2html_run_group }}"
         mode: preserve
+      notify: "restart ct2html"
+
+    # systemd service
+
+    - name: Deploy ct2html systemd unit
+      copy:
+        dest: "/etc/systemd/system/{{ ct2html_service_name }}.service"
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=ct2html web server
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/bin/ct2html -w -c {{ ct2html_webroot }} {{ ct2html_extra_args }}
+          WorkingDirectory={{ ct2html_webroot }}
+          User={{ ct2html_run_user }}
+          Group={{ ct2html_run_group }}
+          Restart=always
+          RestartSec=2
+          StandardOutput=journal
+          StandardError=journal
+          SyslogIdentifier={{ ct2html_service_name }}
+
+          [Install]
+          WantedBy=multi-user.target
+      notify:
+        - "reload systemd"
+        - "restart ct2html"
+
+    - name: Ensure ct2html service is enabled and started
+      systemd:
+        name: "{{ ct2html_service_name }}"
+        enabled: true
+        state: started
+        daemon_reload: true
 
     # Verification
+
     - name: Stat the ct2html binary
       stat:
         path: /bin/ct2html
@@ -168,24 +229,31 @@
         fail_msg: "/bin/ct2html is missing or not executable"
         success_msg: "ct2html binary present and executable"
 
-    - name: Sanity-run ct2html binary
-      command: /bin/ct2html --help
-      register: ct2html_run_check
-      changed_when: false
-      failed_when: false
+    - name: Check ct2html service status
+      systemd:
+        name: "{{ ct2html_service_name }}"
+      register: ct2html_service_status
 
-    - name: Report ct2html execution check
+    - name: Report ct2html service check
       debug:
         msg: >-
-          ct2html --help exited with rc={{ ct2html_run_check.rc }}.
-          rc 127 or an "exec format error" in stderr means the binary
-          is broken/wrong-arch; any other rc (even non-zero, e.g. from
-          an unrecognised flag) means the binary itself runs fine.
-      failed_when: ct2html_run_check.rc == 127 or 'exec format error' in ct2html_run_check.stderr
+          ct2html.service ActiveState={{ ct2html_service_status.status.ActiveState }},
+          SubState={{ ct2html_service_status.status.SubState }}.
+          Logs: journalctl -u {{ ct2html_service_name }}
+
+    - name: Assert ct2html service is active and running
+      assert:
+        that:
+          - ct2html_service_status.status.ActiveState == 'active'
+          - ct2html_service_status.status.SubState == 'running'
+        fail_msg: >-
+          ct2html.service is not active/running — check
+          `journalctl -u {{ ct2html_service_name }} -n 100` on the host.
+        success_msg: "ct2html.service is active and running"
 
     - name: Find deployed page files
       find:
-        paths: "/var/www/{{ domain }}"
+        paths: "{{ ct2html_webroot }}"
         recurse: true
         file_type: file
       register: deployed_pages
@@ -195,7 +263,7 @@
         that:
           - deployed_pages.matched > 0
         fail_msg: >-
-          No files found under /var/www/{{ domain }} — check that
+          No files found under {{ ct2html_webroot }} — check that
           pageroot_dir ({{ pageroot_dir }}) actually contains files
           on the control node.
-        success_msg: "{{ deployed_pages.matched }} page file(s) deployed to /var/www/{{ domain }}"
+        success_msg: "{{ deployed_pages.matched }} page file(s) deployed to {{ ct2html_webroot }}"
