@@ -107,7 +107,7 @@
       when: ct2html_needs_update
 
     - name: Build ct2html
-      command: zig build -Doptimize=ReleaseSafe
+      command: zig build -Doptimize=ReleaseFast
       args:
         chdir: "{{ ct2html_src_dir }}"
       when: ct2html_needs_update
