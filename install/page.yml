@@ -6,9 +6,9 @@
     - vars.yml
   vars:
     pageroot_dir: "{{ playbook_dir }}/../pageroot"
-    ct2html_release_url: "https://github.com/yungcxn/ct2html/releases/latest/download/ct2html-ReleaseSafe.tar.gz"
-    ct2html_api_url: "https://api.github.com/repos/yungcxn/ct2html/releases/latest"
-    ct2html_version_file: /usr/local/share/ct2html/release_tag
+    ct2html_repo_url: "https://github.com/yungcxn/ct2html.git"
+    ct2html_src_dir: /home/ansible/Documents/ct2html
+    ct2html_version_file: /usr/local/share/ct2html/build_commit
     ct2html_webroot: "/var/www/{{ domain }}"
     ct2html_service_name: ct2html
     ct2html_run_user: www-data
@@ -30,94 +30,116 @@
 
   tasks:
 
-    # ct2html binary
+    # ct2html binary — built from source
 
-    - name: Query GitHub for the latest ct2html release
-      uri:
-        url: "{{ ct2html_api_url }}"
-        return_content: true
-        headers:
-          Accept: "application/vnd.github+json"
-      register: ct2html_latest_release
+    - name: Ensure git is installed
+      package:
+        name: git
+        state: present
+
+    - name: Check for the zig toolchain
+      command: zig version
+      register: ct2html_zig_version
+      changed_when: false
+      failed_when: false
+
+    - name: Fail if zig is not installed
+      assert:
+        that:
+          - ct2html_zig_version.rc == 0
+        fail_msg: >-
+          zig was not found on {{ inventory_hostname }}. Install it first before running this playbook.
+        success_msg: "zig toolchain found: {{ ct2html_zig_version.stdout }}"
+
+    - name: Query latest commit on the ct2html default branch
+      command: git ls-remote {{ ct2html_repo_url }} HEAD
+      register: ct2html_ls_remote
       delegate_to: localhost
       become: false
       run_once: true
+      changed_when: false
 
-    - name: Set fact for latest available release tag
+    - name: Set fact for latest available commit
       set_fact:
-        ct2html_latest_tag: "{{ ct2html_latest_release.json.tag_name }}"
+        ct2html_latest_commit: "{{ ct2html_ls_remote.stdout.split()[0] }}"
 
-    - name: Check whether a release tag is already recorded on the host
+    - name: Check whether a build is already recorded on the host
       stat:
         path: "{{ ct2html_version_file }}"
       register: ct2html_version_file_stat
 
-    - name: Read the currently installed release tag, if any
+    - name: Read the currently installed commit, if any
       slurp:
         src: "{{ ct2html_version_file }}"
-      register: ct2html_installed_tag_raw
+      register: ct2html_installed_commit_raw
       when: ct2html_version_file_stat.stat.exists
 
-    - name: Set fact for currently installed release tag
+    - name: Set fact for currently installed commit
       set_fact:
-        ct2html_installed_tag: >-
-          {{ (ct2html_installed_tag_raw.content | b64decode | trim)
+        ct2html_installed_commit: >-
+          {{ (ct2html_installed_commit_raw.content | b64decode | trim)
              if ct2html_version_file_stat.stat.exists else '' }}
 
-    - name: Determine whether ct2html needs to be (re)installed
+    - name: Determine whether ct2html needs to be (re)built
       set_fact:
-        ct2html_needs_update: "{{ ct2html_installed_tag != ct2html_latest_tag }}"
+        ct2html_needs_update: "{{ ct2html_installed_commit != ct2html_latest_commit }}"
 
     - name: Report ct2html version check
       debug:
         msg: >-
-          Installed tag: '{{ ct2html_installed_tag }}',
-          latest tag: '{{ ct2html_latest_tag }}'.
-          {{ 'Will reinstall.' if ct2html_needs_update else 'Already up to date, skipping download.' }}
+          Installed commit: '{{ ct2html_installed_commit }}',
+          latest commit: '{{ ct2html_latest_commit }}'.
+          {{ 'Will rebuild.' if ct2html_needs_update else 'Already up to date, skipping build.' }}
 
-    - name: Create temporary directory for ct2html download
-      tempfile:
+    - name: Ensure source parent directory exists
+      file:
+        path: "{{ ct2html_src_dir | dirname }}"
         state: directory
-        suffix: ct2html
-      register: ct2html_tmp
+        mode: '0755'
       when: ct2html_needs_update
 
-    - name: Download latest ct2html release tarball
-      get_url:
-        url: "{{ ct2html_release_url }}"
-        dest: "{{ ct2html_tmp.path }}/ct2html-ReleaseSafe.tar.gz"
-        mode: '0644'
+    - name: Clone or update the ct2html repository
+      git:
+        repo: "{{ ct2html_repo_url }}"
+        dest: "{{ ct2html_src_dir }}"
+        version: "{{ ct2html_latest_commit }}"
+        force: true
       when: ct2html_needs_update
 
-    - name: Extract ct2html tarball
-      unarchive:
-        src: "{{ ct2html_tmp.path }}/ct2html-ReleaseSafe.tar.gz"
-        dest: "{{ ct2html_tmp.path }}"
-        remote_src: true
+    - name: Build ct2html
+      command: zig build -Doptimize=ReleaseSafe
+      args:
+        chdir: "{{ ct2html_src_dir }}"
       when: ct2html_needs_update
 
-    - name: Locate the extracted ct2html executable
-      find:
-        paths: "{{ ct2html_tmp.path }}"
-        file_type: file
-        excludes: "*.tar.gz"
-      register: ct2html_extracted
+    - name: Stat the freshly built binary
+      stat:
+        path: "{{ ct2html_src_dir }}/ct2html"
+      register: ct2html_built_bin
       when: ct2html_needs_update
 
-    - name: Fail if the archive layout is not what we expect
+    - name: Fail if the build did not produce the expected binary
       assert:
         that:
-          - ct2html_extracted.matched == 1
+          - ct2html_built_bin.stat.exists
         fail_msg: >-
-          Expected exactly one file inside ct2html-ReleaseSafe.tar.gz,
-          found {{ ct2html_extracted.matched }}. The release layout may
-          have changed — check {{ ct2html_tmp.path }} manually.
-        success_msg: "Found single ct2html binary candidate in archive"
+          zig build did not produce {{ ct2html_src_dir }}/ct2html — check
+          the build output above and confirm the executable name/location
+          in build.zig hasn't changed.
+        success_msg: "Found built ct2html binary at {{ ct2html_src_dir }}/ct2html"
+      when: ct2html_needs_update
+
+    - name: Test that the freshly built binary runs
+      command: ./ct2html --help
+      args:
+        chdir: "{{ ct2html_src_dir }}"
+      register: ct2html_help_check
+      changed_when: false
       when: ct2html_needs_update
 
     - name: Install ct2html binary to /bin/ct2html
       copy:
-        src: "{{ ct2html_extracted.files[0].path }}"
+        src: "{{ ct2html_src_dir }}/ct2html"
         dest: /bin/ct2html
         remote_src: true
         owner: root
@@ -135,19 +157,13 @@
         mode: '0755'
       when: ct2html_needs_update
 
-    - name: Record the installed release tag
+    - name: Record the installed commit
       copy:
-        content: "{{ ct2html_latest_tag }}"
+        content: "{{ ct2html_latest_commit }}"
         dest: "{{ ct2html_version_file }}"
         owner: root
         group: root
         mode: '0644'
-      when: ct2html_needs_update
-
-    - name: Clean up temporary download directory
-      file:
-        path: "{{ ct2html_tmp.path }}"
-        state: absent
       when: ct2html_needs_update
 
     # Page files
