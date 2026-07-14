@@ -5,8 +5,7 @@
 !script:https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js
 !script:headings.js
 
-?<header id="siteHeader">
-  <!-- Left gutter: your GitHub / Google Scholar links -->
+?@raw(<header id="siteHeader">
   <div class="header-left">
     <a href="https://github.com/yungcxn">github</a>
   </div>
@@ -15,6 +14,6 @@
   </div>
   <div class="header-right">
     <a href="https://scholar.google.com/citations?user=O2w3k3MAAAAJ&hl=de&oi=ao">google scholar</a>
-    <a href="mailto:botcxn(at)gmx.de">mail</a>
+    <a href="mailto:botcxn\(at\)gmx.de">mail</a>
   </div>
-</header>
+</header>)

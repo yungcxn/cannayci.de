@@ -5,4 +5,4 @@
 this is my blog page.
 
 
-?@script(darkmode-font.js)
+@script:darkmode-font.js
