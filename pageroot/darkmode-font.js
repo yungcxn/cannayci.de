@@ -11,30 +11,29 @@ fontBtn.className = 'toggle-btn';
 fontBtn.innerHTML = 'A';
 document.body.appendChild(fontBtn);
 
-// ----- Dark Mode -----
-function setDarkMode(enabled){
-    if(enabled) document.body.classList.add('dark');
-    else document.body.classList.remove('dark');
-    localStorage.setItem('darkMode', enabled);
+// ----- Light Mode (opt-in override; dark is the CSS default) -----
+function setLightMode(enabled){
+if(enabled) document.body.classList.add('light');
+else document.body.classList.remove('light');
+    localStorage.setItem('lightMode', enabled);
 }
-const savedDark = localStorage.getItem('darkMode')==='true';
-setDarkMode(savedDark);
+const savedLight = localStorage.getItem('lightMode')==='true';
+setLightMode(savedLight);
 
 darkBtn.addEventListener('click', () => {
-    setDarkMode(!document.body.classList.contains('dark'));
+setLightMode(!document.body.classList.contains('light'));
 });
 
 // ----- Font Switch -----
-function setFontModern(enabled){
-    document.body.style.setProperty('--body-font', enabled ? "'Inter', sans-serif" : "'Latin Modern Roman', serif");
-    document.body.style.setProperty('--serif-font', enabled ? "'Inter', sans-serif" : "'LMSans10', sans-serif");
+function setFontModern(enabled) {
+    document.body.classList.toggle('font-modern', enabled);
     localStorage.setItem('modernFont', enabled);
 }
 
-const savedFont = localStorage.getItem('modernFont')==='true';
+const savedFont = localStorage.getItem('modernFont') === 'true';
 setFontModern(savedFont);
 
 fontBtn.addEventListener('click', () => {
-    const isModern = document.body.style.getPropertyValue('--body-font').includes('Inter');
+    const isModern = document.body.classList.contains('font-modern');
     setFontModern(!isModern);
 });

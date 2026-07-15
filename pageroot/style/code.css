@@ -12,12 +12,12 @@ figcaption code,
   padding: 2px 5px;
   border-radius: 4px;
   font-family: var(--mono-font);
-  font-size: 0.88em;
+  font-size: 1em;
 }
 
 /* Block‑level code: any <code> that is NOT inside one of the above elements */
 /* Block‑level code – only when NOT inside a Prism <pre> */
-code:not(p code):not(li code):not(td code):not(figcaption code):not(.info code):not(.footnotes code):not(pre[class*="language-"] code) {
+code:not(p code):not(li code):not(td code):not(figcaption code):not(.info code):not(.footnotes code):not(pre[class*="language-"] code):not(pre code) {
   display: block;
   background: var(--code-bg);
   padding: clamp(0.65em, 2vw, 1em);
@@ -26,12 +26,25 @@ code:not(p code):not(li code):not(td code):not(figcaption code):not(.info code):
   white-space: pre-wrap;
   word-wrap: break-word;
   font-family: var(--mono-font);
-  font-size: clamp(0.8em, 1.5vw, 0.88em);
+  font-size: clamp(1.05em, 1.5vw, 1.1em);
   max-width: 100%;
   box-sizing: border-box;
   margin: var(--space-sm) 0;
   text-align: left;
   tab-size: 4;
+}
+
+/* Let Prism own its own <pre><code> blocks entirely — just make them match your theme's radius/margin/font-size instead of redeclaring layout */
+pre[class*="language-"] {
+  border-radius: 6px;
+  margin: var(--space-sm) 0;
+  font-size: clamp(1.05em, 1.5vw, 1.1em);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+pre[class*="language-"] code {
+  font-family: var(--mono-font);
 }
 
 /* <pre> is optional, but if used it should not add its own styling */

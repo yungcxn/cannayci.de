@@ -1,53 +1,66 @@
-/* ----- CSS Variables ----- */
 :root {
-  --bg-color: #ffffff;
-  --text-color: #222222;
-  --link-color: #2A6FE0;
-  --link-hover: #1A4FB0;
-  --heading-underline: #DDD;
-  --blockquote-color: #555;
-  --code-bg: #f5f5f5;
-  --body-font: 'Latin Modern Roman', serif;
-  --serif-font: 'LMSans10', sans-serif;
+  --body-font-classic: 'Source Serif Pro', serif;
+  --serif-font-classic: 'LMSans10', sans-serif;
+
+  --body-font-modern: 'Inter', sans-serif;
+  --serif-font-modern: 'Inter', sans-serif;
+
+  --body-font: var(--body-font-classic);
+  --serif-font: var(--serif-font-classic);
+
+  /* Dark theme is now the default */
+  --bg-color: #0a080f;
+  --text-color: #E0E0E0;
+  --link-color: #A996E0;
+  --link-hover: #C0B0EE;
+  --heading-underline: #3A3348;
+  --blockquote-color: #A9A0BC;
+  --code-bg: #26212F;
   --mono-font: 'Ubuntu Mono', monospace;
 
-  --fn-accent: #6B7BD0;
-  --fn-badge-bg: #6B7BD0;
-  --fn-badge-text: #fff;
+  --fn-accent: #B3A3E0;
+  --fn-badge-bg: #B3A3E0;
+  --fn-badge-text: #0a0a0a;
 
-  --font-size: clamp(15px, 1.2vw + 11.1px, 20px);
-  --space-xs:  clamp(0.25rem, 0.5vw, 0.4rem);
-  --space-sm:  clamp(0.5rem,  1vw,   0.75rem);
-  --space-md:  clamp(0.75rem, 1.5vw, 1.25rem);
-  --space-lg:  clamp(1rem,    2.5vw, 1.75rem);
-  --space-xl:  clamp(1.25rem, 3.5vw, 2.5rem);
-  --content-padding: clamp(16px, 4vw, 40px);
-  --btn-size: clamp(42px, 6vw, 52px);
-  --btn-font: clamp(18px, 3vw, 24px);
+  --font-size: clamp(17px, 1.2vw + 12.5px, 22px);
+  --space-xs:  clamp(0.3rem,  0.5vw, 0.5rem);
+  --space-sm:  clamp(0.6rem,  1vw,   0.9rem);
+  --space-md:  clamp(0.9rem,  1.5vw, 1.5rem);
+  --space-lg:  clamp(1.2rem,  2.5vw, 2rem);
+  --space-xl:  clamp(1.5rem,  3.5vw, 3rem);
+  --content-padding: clamp(12px, 3vw, 32px);
+  --btn-size: clamp(46px, 6vw, 56px);
+  --btn-font: clamp(20px, 3vw, 26px);
 
-  --header-bg: rgba(255,255,255,0.78);
+  --header-bg: rgba(12,10,18,0.78);
   --header-shadow: none;
-  --toc-active: #6B7BD0;
+  --toc-active: #B3A3E0;
 
-  /* --- Sidenote vars (merged in from new stylesheet) --- */
+/* --- Sidenote vars (merged in from new stylesheet) --- */
   --sidenote-width: 16em;
   --gap: 3em;
   --note-color: #666;
-  --marker-color: #b34700;
+  --marker-color: var(--link-hover);
 }
 
-body.dark {
-  --bg-color: #080808;
-  --text-color: #E0E0E0;
-  --link-color: #68B8F5;
-  --link-hover: #4EA0E0;
-  --heading-underline: #444;
-  --blockquote-color: #AAA;
-  --code-bg: #2D2D3D;
-  --header-bg: rgba(8,8,8,0.78);
+/* Light theme is now the opt-in override */
+body.light {
+  --bg-color: #ffffff;
+  --text-color: #222222;
+  --link-color: #6D4FC7;
+  --link-hover: #5A3FA8;
+  --heading-underline: #DDD;
+  --blockquote-color: #555;
+  --code-bg: #f5f5f5;
+  --header-bg: rgba(255,255,255,0.78);
   --header-shadow: none;
-  --fn-accent: #9B9BFF;
-  --fn-badge-bg: #9B9BFF;
-  --fn-badge-text: #0a0a0a;
-  --toc-active: #9B9BFF;
+  --fn-accent: #8A73CC;
+  --fn-badge-bg: #8A73CC;
+  --fn-badge-text: #fff;
+  --toc-active: #8A73CC;
+}
+
+body.font-modern {
+  --body-font: var(--body-font-modern);
+  --serif-font: var(--serif-font-modern);
 }

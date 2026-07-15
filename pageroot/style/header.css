@@ -14,10 +14,9 @@ header {
   display: grid;
   grid-template-columns: 1fr minmax(auto, 900px) 1fr;
   align-items: center;
-  padding: clamp(4px, 1vw, 8px) 0;
-  font-family: 'Inter', sans-serif;
-  font-weight: 400;
-  font-size: clamp(0.82em, 1.5vw, 1em);
+  padding: clamp(1px, 1vw, 2px) 0;
+  font-family: 'IBM VGA';
+  font-size: clamp(1em, 1.5vw, 1.1em);
   color: var(--text-color);
 }
 
@@ -56,11 +55,4 @@ header {
 .header-right a:hover {
   opacity: 1;
   color: var(--link-color);
-}
-
-@media (max-width: 600px) {
-  header {
-    grid-template-columns: 0 1fr 0;
-  }
-  .header-left, .header-right { display: none; }
 }

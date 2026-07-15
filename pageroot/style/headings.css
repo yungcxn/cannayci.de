@@ -50,7 +50,7 @@ h6:hover .heading-link {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.85em;
+  font-size: 1.1em;
   opacity: 0;
   transition: opacity 0.25s ease, left 0.25s ease, right 0.25s ease;
   pointer-events: none;         /* click passes to anchor */
@@ -63,7 +63,7 @@ h6:hover .heading-link {
 
 .heading-link:hover .chain-icon {
   opacity: 1;
-  left: -1.8em;
+  left: -0.8em;
 }
 
 /* Medium screens: no room on left → place icon on the right */
