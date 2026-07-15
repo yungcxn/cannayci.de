@@ -1,0 +1,25 @@
+/* ========== MATH & ARABIC NUMERALS/SPEECH ========== */
+.math {
+  font-family: 'Latin Modern Math', serif;
+  overflow-x: auto;
+  display: block;
+}
+
+/* Arabic numerals & speech */
+.cnum[lang="ar"] { direction: rtl; text-align: right; }
+.cnum[lang="ar"][data-num-ar]::before { content: attr(data-num-ar) "-"; }
+.cnum:not([data-num-ar])[data-num]::before { content: attr(data-num) " -"; }
+.cnum[data-num]::before,
+.cnum[data-num-ar]::before {
+  display: inline-block;
+  color: rgb(21, 132, 102);
+  text-align: left;
+}
+.speech {
+  display: block;
+  padding-left: 2em;
+  padding-right: 2em;
+  margin: 0.5em 0;
+  text-align: left;
+  font-family: var(--serif-font);
+}

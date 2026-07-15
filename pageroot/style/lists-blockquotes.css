@@ -1,0 +1,16 @@
+/* ========== LISTS & BLOCKQUOTES ========== */
+/* (split out of the original combined "TABLES, BLOCKQUOTES, FIGURES" section) */
+ul, ol {
+  margin: var(--space-sm) 0 var(--space-sm) clamp(1em, 3vw, 1.5em);
+  padding-left: 0.5em;
+  text-align: left;
+}
+li { margin: 0.2em 0; }
+blockquote {
+  border-left: 3px solid var(--blockquote-color);
+  padding-left: clamp(0.75em, 2vw, 1em);
+  color: var(--blockquote-color);
+  margin: var(--space-md) 0 var(--space-md) clamp(0.5em, 2vw, 1.5em);
+  font-style: italic;
+  text-align: left;
+}

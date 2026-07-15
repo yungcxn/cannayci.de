@@ -1,0 +1,8 @@
+/* ========== MISC / GLOBAL TWEAKS ========== */
+::selection { background: var(--link-color); color: white; }
+
+@media (max-width: 420px) {
+  body { text-align: left; hyphens: none; -webkit-hyphens: none; }
+  blockquote { margin-left: 0.25em; }
+  ul, ol { margin-left: 0.9em; }
+}

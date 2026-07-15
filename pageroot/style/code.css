@@ -1,0 +1,45 @@
+/* ========== CODE – bare <code> is block; inline code inside text ========== */
+
+/* Inline code: inside paragraphs, list items, table cells, etc. */
+p code,
+li code,
+td code,
+figcaption code,
+.info code,
+.footnotes code {
+  display: inline;
+  background: var(--code-bg);
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-family: var(--mono-font);
+  font-size: 0.88em;
+}
+
+/* Block‑level code: any <code> that is NOT inside one of the above elements */
+/* Block‑level code – only when NOT inside a Prism <pre> */
+code:not(p code):not(li code):not(td code):not(figcaption code):not(.info code):not(.footnotes code):not(pre[class*="language-"] code) {
+  display: block;
+  background: var(--code-bg);
+  padding: clamp(0.65em, 2vw, 1em);
+  overflow-x: auto;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: var(--mono-font);
+  font-size: clamp(0.8em, 1.5vw, 0.88em);
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: var(--space-sm) 0;
+  text-align: left;
+  tab-size: 4;
+}
+
+/* <pre> is optional, but if used it should not add its own styling */
+pre {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  overflow: visible;
+}
+pre code { display: block; }

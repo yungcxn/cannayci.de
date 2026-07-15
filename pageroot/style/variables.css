@@ -1,0 +1,53 @@
+/* ----- CSS Variables ----- */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #222222;
+  --link-color: #2A6FE0;
+  --link-hover: #1A4FB0;
+  --heading-underline: #DDD;
+  --blockquote-color: #555;
+  --code-bg: #f5f5f5;
+  --body-font: 'Latin Modern Roman', serif;
+  --serif-font: 'LMSans10', sans-serif;
+  --mono-font: 'Ubuntu Mono', monospace;
+
+  --fn-accent: #6B7BD0;
+  --fn-badge-bg: #6B7BD0;
+  --fn-badge-text: #fff;
+
+  --font-size: clamp(15px, 1.2vw + 11.1px, 20px);
+  --space-xs:  clamp(0.25rem, 0.5vw, 0.4rem);
+  --space-sm:  clamp(0.5rem,  1vw,   0.75rem);
+  --space-md:  clamp(0.75rem, 1.5vw, 1.25rem);
+  --space-lg:  clamp(1rem,    2.5vw, 1.75rem);
+  --space-xl:  clamp(1.25rem, 3.5vw, 2.5rem);
+  --content-padding: clamp(16px, 4vw, 40px);
+  --btn-size: clamp(42px, 6vw, 52px);
+  --btn-font: clamp(18px, 3vw, 24px);
+
+  --header-bg: rgba(255,255,255,0.78);
+  --header-shadow: none;
+  --toc-active: #6B7BD0;
+
+  /* --- Sidenote vars (merged in from new stylesheet) --- */
+  --sidenote-width: 16em;
+  --gap: 3em;
+  --note-color: #666;
+  --marker-color: #b34700;
+}
+
+body.dark {
+  --bg-color: #080808;
+  --text-color: #E0E0E0;
+  --link-color: #68B8F5;
+  --link-hover: #4EA0E0;
+  --heading-underline: #444;
+  --blockquote-color: #AAA;
+  --code-bg: #2D2D3D;
+  --header-bg: rgba(8,8,8,0.78);
+  --header-shadow: none;
+  --fn-accent: #9B9BFF;
+  --fn-badge-bg: #9B9BFF;
+  --fn-badge-text: #0a0a0a;
+  --toc-active: #9B9BFF;
+}

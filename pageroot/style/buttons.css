@@ -1,0 +1,25 @@
+/* ========== TOGGLE BUTTONS ========== */
+.toggle-btn {
+  position: fixed;
+  bottom: clamp(14px, 3vw, 24px);
+  width: var(--btn-size);
+  height: var(--btn-size);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  font-size: var(--btn-font);
+  z-index: 9999;
+  transition: transform 0.3s;
+}
+.toggle-btn:hover { transform: scale(1.1); }
+#darkModeToggle {
+  right: clamp(14px, 3vw, 24px);
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+#fontToggle {
+  right: calc(clamp(14px, 3vw, 24px) + var(--btn-size) + 10px);
+  background: var(--bg-color);
+  color: var(--text-color);
+}

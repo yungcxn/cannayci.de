@@ -1,0 +1,96 @@
+/* ========== HEADINGS ========== */
+
+/* h1 stays clean – no click, no chain */
+h1 {
+  font-weight: 600;
+  font-size: clamp(1.6em, 4vw, 2.5em);
+  line-height: 1.2;
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--heading-underline);
+  padding-bottom: 0.25em;
+  margin-top: var(--space-lg);
+  text-align: left;
+  cursor: default;
+}
+
+/* h2‑h6: clickable, chain slides out on hover, heading lifts */
+h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-xs);
+  text-align: left;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+h2:hover, h3:hover, h4:hover, h5:hover, h6:hover {
+  transform: translateY(-2px);
+}
+.heading-link {
+  text-decoration: none;
+  color: inherit;               /* keeps heading colour */
+  display: inline;               /* behaves exactly like original heading text */
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+/* Preserve the heading hover lift – apply it to the link */
+h2:hover .heading-link,
+h3:hover .heading-link,
+h4:hover .heading-link,
+h5:hover .heading-link,
+h6:hover .heading-link {
+  transform: translateY(-2px);
+}
+
+/* Chain icon inside the anchor */
+.chain-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85em;
+  opacity: 0;
+  transition: opacity 0.25s ease, left 0.25s ease, right 0.25s ease;
+  pointer-events: none;         /* click passes to anchor */
+}
+
+/* Default: icon on the left */
+.chain-icon {
+  left: 0;
+}
+
+.heading-link:hover .chain-icon {
+  opacity: 1;
+  left: -1.8em;
+}
+
+/* Medium screens: no room on left → place icon on the right */
+@media (max-width: 600px) {
+  .chain-icon {
+    left: auto;
+    right: 0;
+  }
+
+  .heading-link:hover .chain-icon {
+    right: -1.8em;
+  }
+}
+
+/* Very narrow screens: hidden (handled by JS, but double‑safety) */
+@media (max-width: 400px) {
+  .chain-icon {
+    display: none;
+  }
+}
+
+h2 {
+  font-size: clamp(1.3em, 3vw, 1.8em);
+  border-bottom: 1px solid var(--heading-underline);
+  padding-bottom: 0.15em;
+}
+h3 { font-size: clamp(1.1em, 2.5vw, 1.4em); }
+h4 { font-size: clamp(1em, 2vw, 1.2em); }
+h5 { font-size: 0.95em; }
+h6 { font-size: 0.9em; }

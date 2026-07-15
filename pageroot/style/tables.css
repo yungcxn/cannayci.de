@@ -1,0 +1,46 @@
+/* ========== TABLES ========== */
+/* (split out of the original combined "TABLES, BLOCKQUOTES, FIGURES" section) */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: var(--space-lg) 0;
+  border-radius: 6px;
+  border: 1px solid var(--heading-underline);
+}
+.table-wrap table { margin: 0; border: none; border-radius: 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-md) 0;
+  font-size: clamp(0.8em, 1.5vw, 0.9em);
+  border: 1px solid var(--heading-underline);
+  border-radius: 6px;
+  overflow: hidden;
+  text-align: left;
+}
+thead {
+  background: var(--code-bg);
+  border-bottom: 2px solid var(--heading-underline);
+}
+th {
+  padding: clamp(6px, 1.5vw, 10px) clamp(8px, 2vw, 14px);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--blockquote-color);
+  border-right: 1px solid var(--heading-underline);
+  white-space: nowrap;
+}
+th:last-child { border-right: none; }
+td {
+  padding: clamp(6px, 1.2vw, 9px) clamp(8px, 2vw, 14px);
+  border-top: 1px solid var(--heading-underline);
+  border-right: 1px solid var(--heading-underline);
+  vertical-align: top;
+  white-space: normal;
+  word-break: break-word;
+}
+td:last-child { border-right: none; }
+tbody tr:hover { background: var(--code-bg); transition: background 0.15s; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }

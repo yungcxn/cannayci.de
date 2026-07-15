@@ -1,0 +1,21 @@
+/* ========== FOOTER ========== */
+footer#siteFooter {
+  margin-top: var(--space-xl);
+  padding: var(--space-md) 0;
+  border-top: 1px solid var(--heading-underline);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82em;
+  color: var(--blockquote-color);
+}
+.footer-left { text-align: left; }
+.footer-right { text-align: right; white-space: nowrap; }
+.footer-right a {
+  color: inherit;
+  text-decoration: none;
+  margin-left: 1em;
+  transition: color 0.2s;
+}
+.footer-right a:hover { color: var(--link-color); text-decoration: underline; }
