@@ -61,7 +61,6 @@ http {
         add_header Cross-Origin-Opener-Policy same-origin always;
         add_header Cross-Origin-Resource-Policy same-origin always;
 
-        # NEW: redirect ?raw requests for .ct files to the raw-serving location
         if ($args ~ "(^|&)raw(=|&|$)") {
             rewrite ^(.*\.ct)$ /_raw$1 last;
         }
@@ -74,15 +73,7 @@ http {
             deny all;
             return 404;
         }
-        location ~ (^|/)_ {
-            deny all;
-            return 404;
-        }
-        location ~ ~$ {
-            deny all;
-        }
 
-        # internal-only location that serves the raw .ct file as plain text
         location ~ ^/_raw(/.*\.ct)$ {
             internal;
             root /var/www/{{ domain }};
@@ -91,6 +82,14 @@ http {
             add_header Content-Type "text/plain; charset=utf-8" always;
             add_header Content-Disposition "inline" always;
             add_header Cache-Control "no-store" always;
+        }
+
+        location ~ (^|/)_ {
+            deny all;
+            return 404;
+        }
+        location ~ ~$ {
+            deny all;
         }
 
         location = / {
