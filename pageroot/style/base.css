@@ -5,7 +5,7 @@ html {
 }
 
 body {
-  max-width: 900px;
+  max-width: var(--main-width);
   margin: 0 auto;
   padding: 0 var(--content-padding);
   background: var(--bg-color);
@@ -18,6 +18,16 @@ body {
   -webkit-hyphens: auto;
   transition: background 0.3s, color 0.3s;
   box-sizing: border-box;
+}
+
+main {
+  transform: translateX(var(--main-offset));
+}
+
+@media (max-width: 1200px) {
+  main {
+    transform: translateX(0);
+  }
 }
 
 /* LaTeX paragraph indent */

@@ -12,11 +12,11 @@ header {
   box-shadow: none;
   border-bottom: 1px solid var(--heading-underline);
   display: grid;
-  grid-template-columns: 1fr minmax(auto, 900px) 1fr;
+  grid-template-columns: 1fr minmax(auto, 700px) 1fr;
   align-items: center;
   padding: clamp(1px, 1vw, 2px) 0;
   font-family: 'IBM VGA';
-  font-size: clamp(1em, 1.5vw, 1.1em);
+  font-size: clamp(1em, 1.5vw, 1.5em);
   color: var(--text-color);
 }
 
@@ -55,4 +55,8 @@ header {
 .header-right a:hover {
   opacity: 1;
   color: var(--link-color);
+}
+
+@media (max-width: 1200px) {
+
 }

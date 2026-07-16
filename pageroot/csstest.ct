@@ -20,6 +20,7 @@
 !script:https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js
 !script:https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js
 !scriptcode:window.addEventListener("load", () => {document.querySelectorAll("pre").forEach(pre => {pre.classList.add("line-numbers");});Prism.highlightAll();});
+!scriptcode:(function() {if (!document.querySelector('meta[name="viewport"]')) {var meta = document.createElement('meta');meta.name = 'viewport';meta.content = 'width=device-width, initial-scale=1.0';document.head.appendChild(meta);}})();
 !heading_icon:$
 
 @header:
@@ -27,6 +28,7 @@
     @div(header-center, @link(#, can nayci))
     @div(header-right, @link(https://scholar.google.com/citations?user=O2w3k3MAAAAJ&hl=de&oi=ao, papers) @link(mailto:botcxn-at-gmx-de, mail))
 
+@raw(<main>)
 
 # CSS TEST: NOT REAL CONTENT!
 
@@ -79,6 +81,9 @@ And here is another text that should employ a sidenote[[
 ```python
 def energy(mass, c=299792458):
     return math.pow(math.mul(mass, c), 2)
+
+def energy_fantasy(mass, c=299792458):
+    return math.pow(math.mul(mass, c), 2129309127309127931283019823091283)
 ```
 
 ## Quote
@@ -100,5 +105,7 @@ For further reading...
     <a href="/cookies">Cookies</a>
   </div>
 </footer>)
+
+@raw(</main>)
 
 @script:darkmode-font.js

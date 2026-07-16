@@ -22,7 +22,9 @@
   --fn-badge-bg: #B3A3E0;
   --fn-badge-text: #0a0a0a;
 
+  /* Dynamically scales on mobile, locks to 18px on desktop */
   --font-size: clamp(17px, 1.2vw + 12.5px, 22px);
+  
   --space-xs:  clamp(0.3rem,  0.5vw, 0.5rem);
   --space-sm:  clamp(0.6rem,  1vw,   0.9rem);
   --space-md:  clamp(0.9rem,  1.5vw, 1.5rem);
@@ -36,14 +38,26 @@
   --header-shadow: none;
   --toc-active: #B3A3E0;
 
-/* --- Sidenote vars (merged in from new stylesheet) --- */
-  --sidenote-width: 16em;
-  --gap: 3em;
+  --main-width: 900px;  
+  --main-center-at: 1200px;
+  --main-offset: -150px;
+  --gap: 2em;
+
+  --sidenote-width: max(
+    0px,
+    calc(
+      ((100vw - var(--main-width)) / 2)
+      - var(--main-offset)
+      - var(--gap)
+      - var(--gap)
+    )
+  );
+
   --note-color: #666;
   --marker-color: var(--link-hover);
 }
 
-/* Light theme is now the opt-in override */
+/* Light theme override */
 body.light {
   --bg-color: #ffffff;
   --text-color: #222222;
