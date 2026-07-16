@@ -1,0 +1,50 @@
+@import(parts/pre.ct)
+@deferimport(parts/post.ct)
+
+# Impress (Legal Notice)
+
+This is the required legal notice for my blog page, which is hosted in Germany and operated by me (contact information below).
+It is to be noted that this blog gets no commercial benefit at all and is purely used as a personal note-taking and -sharing platform for my own research, with the target audience being my private circle only.
+
+Also: The pages of this site get automatically generated from the source code, which are hosted on GitHub (see the link in the header).
+
+## Information 
+
+With regards to § 5 DDG is the blog owner:
+
+- Can Nayci
+- Schmidt-Rottluff-Weg 3
+- 22767 Hamburg
+- Germany
+- Email: botcxn-at-gmx-de
+
+## Liability for content
+
+As a website operator, I am responsible for my own content on this website in accordance with applicable laws. 
+However, I am not obligated to monitor transmitted or stored third-party information or to investigate circumstances that indicate illegal activity.
+
+Obligations to remove or block the use of information under generally applicable laws remain unaffected.
+
+## Liability for links
+
+This website may contain links to external third-party websites. 
+I have no influence on the content of these external websites and therefore cannot assume any liability for such third-party content.
+
+The respective provider or operator of the linked websites is always responsible for their own content. 
+Linked websites were checked for possible legal violations at the time of linking. 
+Permanent monitoring of linked pages is not reasonable without specific evidence of a legal violation.
+
+If I become aware of any legal violations, I will remove such links promptly.
+
+## Copyright
+
+The content and works created by the website operator on this website are subject to German copyright law.
+Duplication, processing, distribution, or any form of exploitation beyond the limits of copyright law require prior written consent from the respective author.
+Where content on this website was not created by the operator, third-party copyrights are respected. Third-party content is identified as such where possible.
+
+With regards to programming code being shared on this website: 
+Unless there is no stated license, the code is free to be used for any purpose and my consent is not required at all.
+
+## Privacy
+
+Information about the processing of personal data, cookies, analytics tools, hosting, and other privacy-related topics can be found in the separate **Cookie Notice** of this website (See below).

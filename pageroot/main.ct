@@ -1,8 +1,23 @@
-!style:style.css
+@import(parts/pre.ct)
+@deferimport(parts/post.ct)
+!inldef:post,<article><h3><a href=",",>,</a></h3>,<time>,</time></article>
 
-# Hi
+# Hi :) 
 
-this is my blog page.
+Welcome. This is my -- Can's -- blog page, which consists of my personal notes that I need to be kept
+somewhere, to come back to them later, OR to share them with family and friends.
 
+In 2022, I finished my A-levels, directly started my studies in computer science at the University of Hamburg, finished my bachelor's thesis in 2024, started as a DevOps engineer in 2025 and finished my master's thesis in the same year. 
 
-@script:darkmode-font.js
+In uni, I heavily invested my research period, aswell as my two theses, into the subfields of *event-streamed algorithm distribution*, *compute-optimization through GPUs (CUDA)*, *host-distributed and -monolithic GPU algorithms*,
+
+Currently, I am a *platform- / systems- / and devops-engineer* by **profession**, and **extremely** interested in *linux, compute-optimization, distributed-systems, low-level- and (GP)GPU-programming, some funny stuff* from the world of *theoretical informatics,* -- and whatever falls in-between -- by **hobby**.
+And before that -- in my school days -- I did Minecraft modifications day-and-night and a bit of that OOP from Java still remains in me, but that's of a sinister past...
+
+## Posts
+
+@post(  
+    /posts/00\_motivation.ct,
+    Motivation\, and: Screw Markdown!,
+    July 16, 2026
+)

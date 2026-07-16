@@ -1,0 +1,6 @@
+@import(parts/pre.ct)
+@deferimport(parts/post.ct)
+
+# Motivation, and: Screw Markdown!
+
+(Written right now, slow down)

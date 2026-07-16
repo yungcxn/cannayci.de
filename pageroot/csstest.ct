@@ -1,7 +1,7 @@
-@import(pre.ct)
-@deferimport(post.ct)
+@import(parts/pre.ct)
+@deferimport(parts/post.ct)
 
-# CSS TEST: NOT REAL CONTENT!
+# CSS Test
 
 This article $x = 5$ explores the concept of *energy* in modern physics.
 We also highlight **key equations** and experimental.
@@ -13,9 +13,17 @@ We also highlight **key equations** and experimental.
 @details:Summary,
     This is the summary text. 
 
-And here is another text that should employ a sidenote[[
-    Side notes are useful for providing additional context or references without cluttering the main content.
+And here is another `text` that should employ a sidenote[[
+    Side notes are useful for `providing` additional context or references without cluttering the main content.
 ]], which should be beautifully inlined.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+ 
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
 
 ## Key properties
 
@@ -42,9 +50,9 @@ And here is another text that should employ a sidenote[[
     <tr>
       <td>Test B</td>
       <td>9.8</td>
-      <td>Minor loss</td>
+      <td>Minor loss</td> 
     </tr>
-  </tbody>
+  </tbody> 
 </table>)
 
 ## Code

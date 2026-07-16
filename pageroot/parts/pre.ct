@@ -1,20 +1,21 @@
-!style:style/fonts.css
-!style:style/variables.css
-!style:style/base.css
-!style:style/header.css
-!style:style/headings.css
-!style:style/footer.css
-!style:style/sidenote.css
-!style:style/info.css
-!style:style/details.css
-!style:style/links.css
-!style:style/code.css
-!style:style/lists-blockquotes.css
-!style:style/tables.css
-!style:style/figures.css
-!style:style/special-text.css
-!style:style/buttons.css
-!style:style/utilities.css
+!style:https://cannayci.de/style/article.css
+!style:https://cannayci.de/style/fonts.css
+!style:https://cannayci.de/style/variables.css
+!style:https://cannayci.de/style/base.css
+!style:https://cannayci.de/style/header.css
+!style:https://cannayci.de/style/headings.css
+!style:https://cannayci.de/style/footer.css
+!style:https://cannayci.de/style/sidenote.css
+!style:https://cannayci.de/style/info.css
+!style:https://cannayci.de/style/details.css
+!style:https://cannayci.de/style/links.css
+!style:https://cannayci.de/style/code.css
+!style:https://cannayci.de/style/lists-blockquotes.css
+!style:https://cannayci.de/style/tables.css
+!style:https://cannayci.de/style/figures.css
+!style:https://cannayci.de/style/special-text.css
+!style:https://cannayci.de/style/buttons.css
+!style:https://cannayci.de/style/utilities.css
 !script:https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js
 !style:https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css
 !script:https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js
@@ -28,8 +29,7 @@
 
 @header:
     @div(header-left, @link(https://github.com/yungcxn, github) @link(https://github.com/yungcxn/cannayci.de/, src))
-    @div(header-center, @link(#, can nayci))
+    @div(header-center, @link(/, can nayci))
     @div(header-right, @link(https://scholar.google.com/citations?user=O2w3k3MAAAAJ&hl=de&oi=ao, papers) @link(mailto:botcxn-at-gmx-de, mail))
 
 @raw(<main>)
-

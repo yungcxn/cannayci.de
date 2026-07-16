@@ -2,6 +2,8 @@ p code,
 li code,
 td code,
 figcaption code,
+a code,
+footer code,
 .info code,
 .footnotes code {
   display: inline;
@@ -12,7 +14,7 @@ figcaption code,
   font-size: 1em;
 }
 
-code:not(p code):not(li code):not(td code):not(figcaption code):not(.info code):not(.footnotes code):not(pre[class*="language-"] code):not(pre code) {
+code:not(p code):not(li code):not(td code):not(figcaption code):not(a code):not(footer code):not(.info code):not(.footnotes code):not(pre[class*="language-"] code):not(pre code) {
   display: block;
   background: var(--code-bg);
   padding: clamp(0.65em, 2vw, 1em);

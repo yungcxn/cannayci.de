@@ -4,6 +4,9 @@ a {
   text-decoration: none;
   transition: color 0.2s, transform 0.15s, text-decoration 0.2s;
 }
+a[href^="?"] {
+  color: inherit;
+}
 a:hover {
   color: var(--link-hover);
   text-decoration: underline;

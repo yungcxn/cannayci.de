@@ -1,0 +1,25 @@
+article {
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+article h3 {
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}
+
+article time {
+  display: block;
+  margin-top: 0.25rem;
+  padding-left: 1rem;
+  font-family: "Cormorant Garamond", "Baskerville", "Garamond", serif;
+  font-style: italic;
+  letter-spacing: 0.05em;
+  line-height: 1.5;
+}
+
+article time::before {
+  content: "—";
+  margin-right: 0.75rem;
+  font-style: normal;
+}

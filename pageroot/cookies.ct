@@ -1,0 +1,50 @@
+@import(parts/pre.ct)
+@deferimport(parts/post.ct)
+
+# Cookie Notice
+
+This website uses cookies and similar browser storage technologies only for the purpose of storing user preferences.
+
+The website does not use cookies or similar technologies for advertising, tracking, profiling, analytics, or any commercial purpose.
+
+The source code of this website is publicly available on GitHub (see the link in the header). The implementation of the storage functionality can therefore be independently reviewed.
+
+## Cookies used by this website
+
+This website currently stores only the user preference settings.
+
+- Purpose: Remembering the user's preferred background color or font for future visits.
+- Type: Browser storage / preference cookie.
+- Data stored: A simple setting value representing the selected background color.
+- Personal identification: No personal data is stored.
+- Expiration: The setting remains stored until it is removed by the user or cleared through browser settings.
+
+This storage is used solely to improve the user experience by remembering a previously selected display preference.
+
+## Legal basis
+
+The storage of this preference is based on the user's request to provide a specific display setting and is used only for functionality that is directly related to the operation of this website.
+No data is transferred to third parties, and no user profiles are created.
+
+Again, this can be easily verified through this site's publicly available source code.
+
+## No tracking technologies
+
+This website does not use:
+
+- Analytics services
+- Advertising cookies
+- Tracking pixels
+- Social media tracking
+- Marketing technologies
+- Third-party profiling services
+
+## Managing stored data
+
+Users can remove or block stored browser data at any time through their browser settings.
+
+The website remains functional without JavaScript enabled. However, some optional user preference features, such as saving the selected background color, may not be available.
+
+## Open source transparency
+
+The complete source code of this website is publicly available. The storage mechanism and its implementation can be inspected through the project's source repository.

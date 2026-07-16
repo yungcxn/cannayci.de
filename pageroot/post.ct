@@ -1,6 +1,0 @@
-
-@footer:
-    @div(footer-left, © 2025 Can Nayci · Built with @link(https://github.com/yungcxn/ct2html, my own dynamic site gen))
-    @div(footer-right, @link(/impress, Impress) @link(/cookies, Cookies))
-
-@raw(</main>)
