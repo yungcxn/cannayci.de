@@ -1,12 +1,12 @@
 /* ========== FOOTER ========== */
-footer#siteFooter {
+footer {
   margin-top: var(--space-xl);
   padding: var(--space-md) 0;
   border-top: 1px solid var(--heading-underline);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: 'Inter', sans-serif;
+  font-family: 'IBM VGA';
   font-size: 0.82em;
   color: var(--blockquote-color);
 }

@@ -1,0 +1,10 @@
+
+@footer:
+    @div(footer-left, © 2025 Can Nayci · Built with @link(https://github.com/yungcxn/ct2html, my own dynamic site gen))
+    @div(footer-right, @link(/impress, Impress) @link(/cookies, Cookies))
+
+@raw(</main>)
+
+@scriptcode:const darkBtn = Object.assign(document.body.appendChild(document.createElement('button')), { id:'darkModeToggle', className:'toggle-btn', innerHTML:'\u{1F313}' });const fontBtn = Object.assign(document.body.appendChild(document.createElement('button')), { id:'fontToggle', className:'toggle-btn', innerHTML:'A' });
+@scriptcode:const setLightMode = enabled => (document.body.classList.toggle('light', enabled), localStorage.setItem('lightMode', enabled));setLightMode(localStorage.getItem('lightMode') === 'true');darkBtn.addEventListener('click', () => setLightMode(!document.body.classList.contains('light')));
+@scriptcode:// const setFontModern = enabled => (document.body.classList.toggle('font-modern', enabled), localStorage.setItem('modernFont', enabled));setFontModern(localStorage.getItem('modernFont') === 'true');fontBtn.addEventListener('click', () => setFontModern(!document.body.classList.contains('font-modern')));

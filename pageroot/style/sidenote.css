@@ -31,7 +31,8 @@ input.margin-toggle {
   width: var(--sidenote-width);
   font-size: 0.85em;
   color: var(--note-color);
-  font-family: -apple-system, system-ui, sans-serif;
+  /* font-family: -apple-system, system-ui, sans-serif; */
+  font-family: var(--body-font);
 }
 
 .sidenote::before {
