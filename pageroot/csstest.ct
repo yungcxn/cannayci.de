@@ -1,5 +1,5 @@
 @import(pre.ct)
-@deferimport(post.css)
+@deferimport(post.ct)
 
 # CSS TEST: NOT REAL CONTENT!
 
@@ -11,7 +11,7 @@ We also highlight **key equations** and experimental.
     The effect size was large across all subgroups.
 
 @details:Summary,
-    This is the summary text.
+    This is the summary text. 
 
 And here is another text that should employ a sidenote[[
     Side notes are useful for providing additional context or references without cluttering the main content.
