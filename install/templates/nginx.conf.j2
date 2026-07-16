@@ -61,11 +61,15 @@ http {
         add_header Cross-Origin-Opener-Policy same-origin always;
         add_header Cross-Origin-Resource-Policy same-origin always;
 
+        # NEW: redirect ?raw requests for .ct files to the raw-serving location
+        if ($args ~ "(^|&)raw(=|&|$)") {
+            rewrite ^(.*\.ct)$ /_raw$1 last;
+        }
+
         location ^~ /.well-known/acme-challenge/ {
             default_type "text/plain";
             root /var/www/{{ domain }};
         }
-
         location ~ (^|/)\. {
             deny all;
             return 404;
@@ -77,6 +81,18 @@ http {
         location ~ ~$ {
             deny all;
         }
+
+        # internal-only location that serves the raw .ct file as plain text
+        location ~ ^/_raw(/.*\.ct)$ {
+            internal;
+            root /var/www/{{ domain }};
+            rewrite ^/_raw(/.*)$ $1 break;
+            default_type text/plain;
+            add_header Content-Type "text/plain; charset=utf-8" always;
+            add_header Content-Disposition "inline" always;
+            add_header Cache-Control "no-store" always;
+        }
+
         location = / {
             limit_req zone=req_ct2html burst=10 nodelay;
             gzip off;
@@ -110,13 +126,10 @@ http {
             proxy_read_timeout 10s;
             add_header Cache-Control "no-store" always;
         }
-
         root /var/www/{{ domain }};
         location / {
             try_files $uri =404;
             autoindex off;
-            # expires 1d;
-            # add_header Cache-Control "public, max-age=86400";
         }
     }
 }
