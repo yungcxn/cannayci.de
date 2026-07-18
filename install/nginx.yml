@@ -1,3 +1,4 @@
+---
 - name: Install and configure nginx + certbot
   hosts: web
   become: true
@@ -7,6 +8,12 @@
     manage_firewall: true
     ct2html_listen_host: "127.0.0.1"
     ct2html_listen_port: 8080
+
+  handlers:
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded
 
   tasks:
     - name: Update apt cache
@@ -24,25 +31,39 @@
           - fail2ban
         state: present
 
+    - name: Ensure /var/www parent directory exists
+      file:
+        path: /var/www
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Check if the domain web root already exists
+      stat:
+        path: "/var/www/{{ domain }}"
+      register: nginx_webroot_stat
+
     - name: Create web root for this domain
       file:
         path: "/var/www/{{ domain }}"
         state: directory
         owner: www-data
         group: www-data
-        mode: '0755'    
-    
+        mode: '0755'
+      when: not nginx_webroot_stat.stat.exists
+
     - name: Deploy a placeholder default.ct
       copy:
         dest: "/var/www/{{ domain }}/default.ct"
         content: |
           # Hi
-          
           Everything is working! This is a placeholder, compiled by `ct2html`.
         owner: www-data
         group: www-data
         mode: '0644'
         force: false
+      when: not nginx_webroot_stat.stat.exists
 
     - name: Deploy nginx.conf
       template:
@@ -107,7 +128,7 @@
           - domain is not match('^[0-9]{1,3}(\.[0-9]{1,3}){3}$')
         fail_msg: >-
           DOMAIN resolves to '{{ domain }}', which looks like an IP address (or is empty).
-          Let's Encrypt only issues certificates for real domain names...
+          Let's Encrypt only issues certificates for real domain names,
           set EXPLICIT_DOMAIN in .env to a hostname that has a DNS A/AAAA record pointing at this server.
         success_msg: "domain '{{ domain }}' looks valid, proceeding with certbot"
       when: certbot_email != ""
@@ -118,9 +139,3 @@
       when: certbot_email != ""
       register: certbot_result
       changed_when: "'Congratulations' in certbot_result.stdout"
-
-  handlers:
-    - name: reload nginx
-      service:
-        name: nginx
-        state: reloaded

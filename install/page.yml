@@ -30,8 +30,6 @@
 
   tasks:
 
-    # ct2html binary — built from source
-
     - name: Ensure git is installed
       package:
         name: git
@@ -166,8 +164,6 @@
         mode: '0644'
       when: ct2html_needs_update
 
-    # Page files
-
     - name: Wipe existing files in web root
       file:
         path: "{{ ct2html_webroot }}"
@@ -189,8 +185,6 @@
         group: "{{ ct2html_run_group }}"
         mode: preserve
       notify: "restart ct2html"
-
-    # systemd service
 
     - name: Deploy ct2html systemd unit
       copy:
@@ -227,8 +221,6 @@
         enabled: true
         state: started
         daemon_reload: true
-
-    # Verification
 
     - name: Stat the ct2html binary
       stat:
