@@ -11,8 +11,8 @@
     ct2html_version_file: /usr/local/share/ct2html/build_commit
     ct2html_webroot: "/var/www/{{ domain }}"
     ct2html_service_name: ct2html
-    ct2html_run_user: www-data
-    ct2html_run_group: www-data
+    ct2html_run_user: root
+    ct2html_run_group: root
     ct2html_extra_args: ""
 
   handlers:
