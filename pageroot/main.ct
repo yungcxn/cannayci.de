@@ -4,20 +4,58 @@
 
 # Hi :) 
 
-Welcome. This is my -- Can's -- blog page, which consists of my personal notes that I need to be kept
-somewhere, to come back to them later, OR to share them with family and friends.
+Welcome. This is my blog page, which contains my personal notes and thoughts 
+-- those thoughts, that need to be kept somewhere to be shared with family and friends, aswell as with you and me.
 
 In 2022, I finished my A-levels, directly started my studies in computer science at the University of Hamburg, finished my bachelor's thesis in 2024, started as a DevOps engineer in 2025 and finished my master's thesis in the same year. 
 
-In uni, I heavily invested my research period, aswell as my two theses, into the subfields of *event-streamed algorithm distribution*, *compute-optimization through GPUs (CUDA)*, *host-distributed and -monolithic GPU algorithms*,
+In uni, I heavily invested my research period, aswell as my two theses, into...
 
-Currently, I am a *platform- / systems- / and devops-engineer* by **profession**, and **extremely** interested in *linux, compute-optimization, distributed-systems, low-level- and (GP)GPU-programming, some funny stuff* from the world of *theoretical informatics,* -- and whatever falls in-between -- by **hobby**.
-And before that -- in my school days -- I did Minecraft modifications day-and-night and a bit of that OOP from Java still remains in me, but that's of a sinister past...
+- event-streamed algorithm distribution,
+- modularity in software architecture,
+- compute-optimization through GPUs (CUDA), 
+- host-distributed and -monolithic GPU algorithmic
+
+...while contributing to the field of so-called **Petri nets**.
+
+Now, I am a *platform- / systems- / DevOps-engineer* by profession.
+And in my free time, I mostly delve into low-level- and (GP)GPU-programming, linux (distro-hopping and playing with my systems), compute-optimization and distributed-systems.
+And before that -- in my school days -- I did Minecraft modifications day-and-night and a bit of that OOP from Java still remains in me -- but that's of a sinister past...
 
 ## Posts
 
 @post(  
-    /posts/00\_motivation.ct,
-    Motivation\, and: Screw Markdown!,
-    July 16, 2026
+    /posts/05-whashset-cuda.ct,
+    Efficient hashsets for huge and highly-similar elements in CUDA,
+    July 19, 2026
+)
+
+@post(  
+    /posts/04-rmi-replace-messaging.ct,
+    Consider replacing Java-RMI through Event-Streaming (An old uni story),
+    July 19, 2026
+)
+
+@post(  
+    /posts/03-open-source-story.ct,
+    Open-Source allows you to fulfill your needs globally -- easily,
+    July 19, 2026
+)
+
+@post(
+    /posts/02-oop-zig.ct,
+    Object-oriented Design-Patterns in Zig,
+    July 18, 2026
+)
+
+@post(  
+    /posts/01-fp-zig.ct,
+    Functional Programming in Zig,
+    July 17, 2026
+)
+
+@post(  
+    /posts/00-motivation.ct,
+    Motivation\, `ct2html` and: Screw Markdown!,
+    July 12, 2026
 )

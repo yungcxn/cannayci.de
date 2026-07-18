@@ -1,0 +1,56 @@
+@import(parts/pre.ct)
+@deferimport(parts/post.ct)
+
+# Functional Programming in Zig
+
+In this post, I want to share the ways of functional programming in Zig. I am currently -- and I 
+mention this always whenever I get a chance -- a huge fan of the Zig programming language, and want 
+to experiment with it as much as possible. Through Zig's mighty compile-time metaprogramming, one 
+can get absurdly creative.
+
+For somebody that does not know Zig: It is described as a general-purpose and simple (systems) 
+programming language. I'd classify it as what a C-developer would want with regards to compile-time
+expressibility, but there is of course much more to it and my view on it's superiorities only 
+scrapes the surface.
+
+Before jumping into this, I want to mention that I will be speaking about functional programming
+mechanics, which are disregarding Zig's philosopy, which can be directly seen on their @link(
+https://ziglang.org/, homepage). The most meaningful of those that will be violated is the "No 
+hidden control flow" principle, through e.g. something like a `map`-function. I therefore highly
+recommend to disregard those principles shown here, that violate these guidelines.
+
+That being said: Here comes a small personal story on why I want to do this experiment, and what I 
+use as a reference for for porting functional programming concepts into Zig.
+
+## My personal "Why?!"
+
+I try to keep it short: Germany is notoriously known to be institutionally backwards with regards to
+being modern in tech. We had a very old-fashioned informatics course, starting in year 11, which 
+meant that we had just 2 years of programming in school before jumping straight into work/uni.
+
+Despite the bad curriculum, I was extremely lucky that my teacher did a phenomenal job in his
+functional programming semester, where we learned Racket. For years until year 11, I did Java and 
+had known functional programming concepts by use through Java's standard library and language 
+features, but going through functional programming how we did presented a new world. We rebuilt 
+algorithms in Racket, and what sticked to me the most was the concept of how one can play around 
+with function parameters by @link(https://en.wikipedia.org/wiki/Tail\_call, tail-recursion).
+
+Fast forward: In my third semester of uni, I had then enrolled in a seminar on functional 
+programming, where each one of us had to pick a programming language and speak about its functional
+programming capabilities. I picked Python. My presentation was quite small[[
+    It's sadly **really** small, and more content would've helped me now in the present -- approx.
+    4 years later
+]], as I went through code examples most of the time, but here is a snippet of what I presented 
+(in German):
+
+?@raw(
+    <iframe
+        src="../files/01-fp-zig/Can_Nayci_FP_in_Python.pdf"
+        width="100%"
+        height="auto"
+        style="border: none;"
+    ></iframe>
+)
+
+And @link(../files/01-fp-zig/vortraege-main-2nayci-python-code-examples.zip, here) are my old code 
+examples.
