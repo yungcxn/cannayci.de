@@ -29,28 +29,88 @@ being modern in tech. We had a very old-fashioned informatics course, starting i
 meant that we had just 2 years of programming in school before jumping straight into work/uni.
 
 Despite the bad curriculum, I was extremely lucky that my teacher did a phenomenal job in his
-functional programming semester, where we learned Racket. For years until year 11, I did Java and 
-had known functional programming concepts by use through Java's standard library and language 
-features, but going through functional programming how we did presented a new world. We rebuilt 
-algorithms in Racket, and what sticked to me the most was the concept of how one can play around 
-with function parameters by @link(https://en.wikipedia.org/wiki/Tail\_call, tail-recursion).
+functional programming semester, where we learned @link(https://racket-lang.org/, Racket). For years
+until year 11, I did Java and had known functional programming concepts by use through Java's 
+standard library and language features, but going through functional programming how we did 
+presented a new world. We rebuilt algorithms in Racket, and what sticked to me the most was the
+concept of how one can play around with function parameters by @link(
+https://en.wikipedia.org/wiki/Tail\_call, tail-recursion). My interest in this topic went so far, 
+that I had a project -- to replace my class test --, which involved developing a day care management
+system in Racket. @link(https://github.com/yungcxn/corvey-gbs, Here) is the repository.
 
 Fast forward: In my third semester of uni, I had then enrolled in a seminar on functional 
 programming, where each one of us had to pick a programming language and speak about its functional
-programming capabilities. I picked Python. My presentation was quite small[[
+programming capabilities. I picked Python. In the end, my presentation was quite small[[
     It's sadly **really** small, and more content would've helped me now in the present -- approx.
-    4 years later
-]], as I went through code examples most of the time, but here is a snippet of what I presented 
-(in German):
+    3 years later. But nevertheless, here are my @link(
+    ../files/01-fp-zig/Can-Nayci-FP-in-Python.pdf, slides), aswell as my @link(
+    ../files/01-fp-zig/vortraege-main-2nayci-python-code-examples.zip, code examples).
+]], as I went through code examples most of the time.
 
-?@raw(
-    <iframe
-        src="../files/01-fp-zig/Can_Nayci_FP_in_Python.pdf"
-        width="100%"
-        height="500px"
-        style="border: none;"
-    ></iframe>
-)
+Now in the present, I wanna do a similar thing, but with Zig. And as fp-literature, I look into the
+presentations of my old seminar, aswell as the @link(
+https://github.com/MostlyAdequate/mostly-adequate-guide, mostly-adequate-guide), and some blog 
+posts, I'll mention on the fly. -- Let's start![[
+    Note: My code will be available under @link(https://github.com/yungcxn/fct.zig, this repo).
+    I try to keep code examples labled by exact file path to make it easier to find them, but no
+    guarantees
+]]
 
-And @link(../files/01-fp-zig/vortraege-main-2nayci-python-code-examples.zip, here) are my old code 
-examples.
+## Level 1: Function foundations
+
+This basic principle establishes a view on functions that goes beyond just declaring and calling
+functions.
+
+### 1/3: Functions as first-class citizens
+
+### 2/3: Higher-order functions
+
+### 3/3: Closures and anonymous functions
+
+
+
+## Level 2: Complex control flow through functions
+
+- map
+- filter / where
+- reduce / fold
+- any and all
+- find
+- flat\_map (in reality a monad)
+- zip
+- take / take\_while
+- partition
+
+
+
+## Level 3: Function manipulation
+
+- Currying (transform n-ary functions into unary functions)
+- Partial application and bind
+- Function pipelines (composition)
+- Point-free style (functions without arguments)
+
+
+
+## Level 4: Evaluation model
+
+- Lazy evaluation
+- Generators and infinite sequences
+- Tail call optimization
+
+
+
+## Level 5: Data theory
+
+- Immutability, Algebraic types (Optional, Either, Result, Error-Values), pattern matching
+- Functors, monads, applicatives and more
+
+
+
+
+## Conclusion
+
+There is more; we could look into any specs that the purest functional programming languages 
+exclusively share between each other, but I guess that this is a good way of showing how capable
+Zig is to fulfill functional programming requirements -- so go on and add what you need by yourself. 
+I hope that this post was helpful to you !!
