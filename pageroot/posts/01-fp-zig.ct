@@ -47,7 +47,7 @@ programming capabilities. I picked Python. My presentation was quite small[[
     <iframe
         src="../files/01-fp-zig/Can_Nayci_FP_in_Python.pdf"
         width="100%"
-        height="auto"
+        height="500px"
         style="border: none;"
     ></iframe>
 )
