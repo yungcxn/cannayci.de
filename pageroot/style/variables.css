@@ -55,6 +55,20 @@
 
   --note-color: #666;
   --marker-color: var(--link-hover);
+
+  /* Prism syntax theme (dark) */
+  --code-text: #C9C3D6;
+  --code-comment: #6F6683;
+  --code-punctuation: #B8AFC9;
+  --code-keyword: #A996E0;
+  --code-tag: #D89BC4;
+  --code-string: #E3C088;
+  --code-number: #8FD3C7;
+  --code-function: #E0A3C9;
+  --code-variable: #9FC1E0;
+  --code-operator: #C7BFD6;
+  --code-important: #E38686;
+  --code-selection: rgba(169, 150, 224, 0.25);
 }
 
 /* Light theme override */
@@ -72,6 +86,20 @@ body.light {
   --fn-badge-bg: #8A73CC;
   --fn-badge-text: #fff;
   --toc-active: #8A73CC;
+
+  /* Prism syntax theme (light) */
+  --code-text: #2b2733;
+  --code-comment: #8A8296;
+  --code-punctuation: #55505E;
+  --code-keyword: #6D4FC7;
+  --code-tag: #A34F8C;
+  --code-string: #A6702B;
+  --code-number: #2E8B7A;
+  --code-function: #A34F8C;
+  --code-variable: #3B6EA5;
+  --code-operator: #55505E;
+  --code-important: #C2453F;
+  --code-selection: rgba(109, 79, 199, 0.15);
 }
 
 body.font-modern {
