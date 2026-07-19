@@ -52,8 +52,6 @@ presentations of my old seminar, aswell as the @link(
 https://github.com/MostlyAdequate/mostly-adequate-guide, mostly-adequate-guide), and some blog 
 posts, I'll mention on the fly. -- Let's start![[
     Note: My code will be available under @link(https://github.com/yungcxn/fct.zig, this repo).
-    I try to keep code examples labled by exact file path to make it easier to find them, but no
-    guarantees
 ]]
 
 
@@ -104,7 +102,7 @@ pub fn main() void {
 ```
 
 We -- as Zig enthusiasts -- have no drawbacks here, and this is nice. It still must be said that 
-functions aliases, using them as array elements or type definitions is purely done in compile-time,
+function aliases, using them as array elements or type definitions is purely done in compile-time,
 but all of the aforementioned points would still be visible in runtime[[
     Not type definitions -- of course.
 ]], with function pointers, which behave much like C function pointers.
@@ -143,7 +141,12 @@ pub fn main() void {
 The third example demonstrates, that we do not need to define the type of the applied function `f`,
 which means that any user of the "provided interface" may implement his function that just needs to
 accept 3 arguments of any type, and take then 3 arguments of any -- not even necessarily the same -- 
-type. This feature will be abused much more with the next sections and is crucial here.
+type. This feature will be abused much more with the next sections and is crucial here.[[
+    Note: I'll prefer to use type inference through `anytype` in the following examples, especially
+    since it mimics the behaviour of many other fp-languages, where your function, that e.g. 
+    operates on numbers, can be used on any any numeric type. There are many examples, I guess it 
+    would be harder to find a language that does not support this.
+]]
 
 
 ### 3/3: Closures and anonymous functions
@@ -156,10 +159,40 @@ functions can be directly accessed as a function value.
 Here are some examples of how Zig allows this:
 
 ```zig
-my_func = "Hi";
+fn alternative_add_u3(a: u32, b: u32, c: u32) u32 {
+    return struct {
+        pub fn inner(x: u32, y: u32, z: u32) u32 {
+            // a,b,c are not accessible here
+            return x + y + z;
+        }
+    }.inner(a, b, c);
+}
+
+pub fn main() void {
+    // func through anonymous struct
+    const anon_mul_u3 = struct {
+        pub fn f(a: u32, b: u32, c: u32) u32 {
+            return a * b * c;
+        }
+    }.f;
+    const result1 = anon_mul_u3(2, 3, 4);
+    std.debug.assert(result1 == 24); // OK
+
+    // run func with closure
+    const result2 = alternative_add_u3(1, 2, 3);
+    std.debug.assert(result2 == 6); // OK
+
+    // pass on-the-fly-defined func through anon. struct as arg
+    const result3 = generic_apply_3(struct {
+        pub fn f(a: u32, b: u32, c: u32) u32 {
+            return a * b * c;
+        }
+    }.f, 2, 3, 4);
+    std.debug.assert(result3 == 24); // OK
+} 
 ```
 
-By defining a wrapper struct for an "anonymous" function, we can still achieve the same effect of...
+By defining a wrapper `struct` for an "anonymous" function, we can still achieve the same effect of...
 
 1. ...using inner functions as function-local code blocks, which can be reused with different 
    parameters, and...
@@ -168,6 +201,12 @@ By defining a wrapper struct for an "anonymous" function, we can still achieve t
    sorting criteria. Your comparator -- in case you do not want to reuse it -- can be defined once,
    only for this one call, and is at the same time not usable through any other context.
 
+The compiler always stores a full `struct` definition for it. I hope, that the Zig core team will
+rethink their decision on not implementing function declarations as expressions[[
+    Nevertheless, the reasoning behind this decision is coherent with their language design 
+    principles, but the child in me still insists on wanting this... One of many discussions can
+    be found @link(https://github.com/ziglang/zig/issues/1717, here).
+]] for non-`struct`-wrapped return values, parameters and variables.
 
 @info:
     Info:,
@@ -180,39 +219,140 @@ By defining a wrapper struct for an "anonymous" function, we can still achieve t
     Kelley). I am fully disregarding such strategies for this topic, because I want to show Zig's
     native capabilities, and not some "hacked" version of it.
 
-The compiler always stores a full struct definition for it. I hope, that the Zig core team will
-rethink their decision on not implementing function declarations as expressions[[
-    Nevertheless, the reasoning behind this decision is coherent with their language design 
-    principles, but the child in me still insists on wanting this... One of many discussions can
-    be found @link(https://github.com/ziglang/zig/issues/1717, here).
-]].
 
+## Level 2: Functional ops
 
-## Level 2: Complex control flow through functions
+We'll look at these functions like:
+
+- `map`:                  per-element application of `f(seq[i])`
+- `filter` / `where`:     subsequence of elements where `f(seq[i])` for each element is `true`
+- `reduce` / `fold`:      consecutive-pair-wise application of `f(seq[i], seq[i+1])` to reduce a 
+                          sequence to a single value 
+- `any` and `all`:        check if any or all elements of a sequence satisfy `f(seq[i])`
+- `find`:                 find (the first) element of a sequence that satisfies `f(seq[i])`
+- `flat\_map`:            `map` but flattens the multidimensional sequence at the end to a 1D-seq.
+- `zip`:                  combine parallel sequences into a sequence of tuples
+- `take` / `take\_while`: while `f(seq[i])` is true, add `seq[i]` to the result sequence
+- `partition`:            split a sequence into two subsequences based predicate `f(seq[i])`
 
 This is the first section, where I need to provide an implementation by myself, as something like a 
 `map`-function is not provided by the standard library.[[
     The reason for this is mentioned in the introduction.
-]]
+]] For something that is provided in `std`, like an implementation for `find`, I will just recreate
+it by my own fantasy.
 
+@info:
+    Info:,
+    Zig provides sequences through arrays and tuples. I'll use arrays where each element is of the
+    same type, while tuples will be used when elements could be also of different types. The generic
+    system of Zig does not produce any struggle on the developer's side. I try to provide 
+    implementations for both
 
-- map
-- filter / where
-- reduce / fold
-- any and all
-- find
-- flat\_map (in reality a monad)
-- zip
-- take / take\_while
-- partition
+### About flexibly constructed return types
 
+When implementing these functions, they should be "generic enough" to be used with any sequence 
+type. When returning a value of a type, that is dependent of some parameter's type, a helper
+function is needed to construct the return type out of the type information provided through the
+parameter.
 
+The most interesting case is the `map`-function. By having a declaration of it, I can derive
+the structure for the other functions easily. When thinking about a sequence (array) of unknown
+type but known length `N` and a function `f`, whose signature may be anything, unless it's unary.
+We know that the returned sequence is of length `N` and for each element, what `f` returns.
+
+In the Zig language standard (as of my version, `0.17-devxxx`), a function's return type must not 
+be known at compile-time *by the signature alone*. This is important to understand. Think about the
+following function: 
+
+```zig
+fn f(a: anytype) @TypeOf(a) {
+    return a + @as(@TypeOf(a), 1);
+}
+```
+
+When we now run `\@TypeOf(f).\@"fn".return\_type`, the function's return type is `null` since for 
+`f(3.0)` we get a float type, and for `f(3)` some integer type. Therefore, we need to distinguish
+the case, where we construct some type out of some `f`, where `f` has a "solid, compile-time known
+return type", and the case, where `f` has a "compile-time unknown return type". Luckily we have a 
+solution for the second one: Instead of running `\@TypeOf(f).\@"fn".return\_type`, we do 
+`\@TypeOf(f(a))...`, where `a` is some typed value. Keep in mind: *`\@TypeOf(f(a))` does not execute 
+`f(a)`*. The catch is: For exactly that case, `a` in `\@TypeOf(f(a))` must be a compile-time known 
+value, since we could return a type that is value-dependent, e.g. `f(some\_int)` returns `bool` for 
+`some\_int < 10` and `YourCrazyStruct` for `some\_int > 42`.
+
+On the example on `map`: If our applied function has a compile-time *unknown* return type, we build
+a sequence return type with each element being of the type `\@TypeOf(f(seq[i]))`.
+
+Now you'll understand the following implementation:
+
+### The `map`-function
+
+I'll just paste it:
+
+```zig
+// this is for a function f, that has a comptime-evaluated return type.
+// - through this, f can return different types for different xs
+// - for xs as array, it returns [_]f(xs[0])
+// - for xs as a tuple, it constructs a tuple out of everything f returns
+//     for every element in xs
+pub fn map_comptimef(
+    comptime f: anytype,
+    comptime xs: anytype,
+) MapTypeComptime(f, xs) {
+    var ys: MapTypeComptime(f, xs) = undefined;
+    inline for (xs, 0..) |x, i| ys[i] = f(x);
+    return ys;
+}
+
+// this is for a function f with fixed, non-comptime return type
+// - it is same for all xs, so it just returns [_]ReturnType
+pub fn map(
+    comptime inl: bool,
+    comptime f: anytype,
+    xs: anytype,
+) MapTypeForXsType(f, @TypeOf(xs)) {
+    var ys: MapTypeForXsType(f, @TypeOf(xs)) = undefined;
+    if (inl) {
+        inline for (xs, 0..) |x, i| ys[i] = f(x);
+    } else {
+        for (xs, 0..) |x, i| ys[i] = f(x);
+    }
+    return ys;
+}
+
+fn MapTypeComptime(comptime f: anytype, comptime xs: anytype) type {
+    switch (@typeInfo(@TypeOf(xs))) {
+        .array => return [xs.len]@TypeOf(f(xs[0])),
+        .@"struct" => {
+            const fields = @typeInfo(@TypeOf(xs)).@"struct".fields;
+            var types: [fields.len]type = undefined;
+            inline for (fields, 0..) |field, i| {
+                types[i] = @TypeOf(f(@field(xs, field.name)));
+            }
+            return @Tuple(&types);
+        },
+        else => @compileError("mapping over unsupported type"),
+    }
+}
+
+// returns always an array base! unlike its brother above
+fn MapTypeForXsType(comptime f: anytype, comptime XsType: type) type {
+    return [
+        switch (@typeInfo(XsType)) {
+            .array => |a| a.len,
+            .@"struct" => @typeInfo(XsType).@"struct".fields.len,
+            else => @compileError("mapping over unsupported type"),
+        }
+    ](@typeInfo(@TypeOf(f)).@"fn".return_type orelse
+        @compileError("Comptime unknown return type"));
+}
+```
 
 ## Level 3: Function manipulation
 
 - Currying (transform n-ary functions into unary functions)
 - Partial application and bind
-- Function pipelines (composition)
+- Function pipelines (composition) and forcing inline
 - Point-free style (functions without arguments)
   Note (https://ziglang.org/documentation/0.16.0/#toc-C-Variadic-Functions)
 
@@ -222,7 +362,7 @@ This is the first section, where I need to provide an implementation by myself, 
 
 - Lazy evaluation
 - Generators and infinite sequences
-- Tail call optimization
+- Tail recursion and tail call optimization through \@call
 
 
 
