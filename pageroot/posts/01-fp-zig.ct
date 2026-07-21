@@ -231,34 +231,53 @@ We'll look at these functions like:
 - `any` and `all`:        check if any or all elements of a sequence satisfy `f(seq[i])`
 - `find`:                 find (the first) element of a sequence that satisfies `f(seq[i])`
 - `flat\_map`:            `map` but flattens the multidimensional sequence at the end to a 1D-seq.
-- `zip`:                  combine parallel sequences into a sequence of tuples
+- `zip`:                  combine parallel sequences into a sequence of "pairs"
 - `take` / `take\_while`: while `f(seq[i])` is true, add `seq[i]` to the result sequence
 - `partition`:            split a sequence into two subsequences based predicate `f(seq[i])`
 
-This is the first section, where I need to provide an implementation by myself, as something like a 
+The functions can be split up into three categories with regards to what they return: (1)
+Single-value producers, (2) Sequence producers and (3) Higher-D-Sequence producers. This is the 
+first section, where I need to provide an implementation by myself, as something like a 
 `map`-function is not provided by the standard library.[[
     The reason for this is mentioned in the introduction.
 ]] For something that is provided in `std`, like an implementation for `find`, I will just recreate
-it by my own fantasy.
+it with my own fantasy for the reason of coherence.
 
 @info:
     Info:,
-    Zig provides sequences through arrays and tuples. I'll use arrays where each element is of the
-    same type, while tuples will be used when elements could be also of different types. The generic
-    system of Zig does not produce any struggle on the developer's side. I try to provide 
-    implementations for both
+    Zig provides sequences basically through arrays, tuples, slices and what is supported through
+    the standard lib `std`. The three basic sequence types will be used for the function
+    implementations.
+
+The implementations of these functions will *not be done through recursion*, and the reasons for it 
+are:
+
+1. Without advanced optimization, they are way more performant out-of-the-box, not only because
+   of the call stack overhead, but because I can use bare array and tuple types directly, instead
+   of having to use linked-lists to make the list-construction more efficient.
+2. The whole topic of optimization of recursion in functions will be covered near the end of this
+   post, so we could speak about recursive versions, that would be then usable wrt. efficiency 
+   there.
+3. Doing recursive versions would only try to show if recursion was supported by Zig, but that does
+   not need to be shown by me.
+
+Overall, I want to show the "functional-programming-side" of Zig and that one could make use of it.
+By showing a rather theoretical implementation by inefficient (slop) data structures and recursion,
+I would not be able to present the practicability of it.
+
 
 ### About flexibly constructed return types
 
 When implementing these functions, they should be "generic enough" to be used with any sequence 
-type. When returning a value of a type, that is dependent of some parameter's type, a helper
+type. When returning a value of a type, that is dependent on some parameter's type, a helper
 function is needed to construct the return type out of the type information provided through the
 parameter.
 
 The most interesting case is the `map`-function. By having a declaration of it, I can derive
 the structure for the other functions easily. When thinking about a sequence (array) of unknown
-type but known length `N` and a function `f`, whose signature may be anything, unless it's unary.
-We know that the returned sequence is of length `N` and for each element, what `f` returns.
+type but known length `N` and a function `f`, whose signature may be anything -- unless it's unary
+-- we know that the returned sequence is of length `N`, and as for each element, it is whatever 
+`f` returns.
 
 In the Zig language standard (as of my version, `0.17-devxxx`), a function's return type must not 
 be known at compile-time *by the signature alone*. This is important to understand. Think about the
@@ -273,56 +292,86 @@ fn f(a: anytype) @TypeOf(a) {
 When we now run `\@TypeOf(f).\@"fn".return\_type`, the function's return type is `null` since for 
 `f(3.0)` we get a float type, and for `f(3)` some integer type. Therefore, we need to distinguish
 the case, where we construct some type out of some `f`, where `f` has a "solid, compile-time known
-return type", and the case, where `f` has a "compile-time unknown return type". Luckily we have a 
-solution for the second one: Instead of running `\@TypeOf(f).\@"fn".return\_type`, we do 
-`\@TypeOf(f(a))...`, where `a` is some typed value. Keep in mind: *`\@TypeOf(f(a))` does not execute 
-`f(a)`*. The catch is: For exactly that case, `a` in `\@TypeOf(f(a))` must be a compile-time known 
-value, since we could return a type that is value-dependent, e.g. `f(some\_int)` returns `bool` for 
-`some\_int < 10` and `YourCrazyStruct` for `some\_int > 42`.
+return type", and the case, where `f` has a "compile-time unknown return type"[[
+    In reality, every return type is compile-time known. It is much rather "compile-time variable"
+    and dependent on the input type. Regardless of this detail, I will refer to it as "unknown",
+    since from user-perspective, the reflection system returns `null` for such.
+]]. Luckily we have a solution for the second one: Instead of running 
+`\@TypeOf(f).\@"fn".return\_type`, we do `\@TypeOf(f(a))...`, where `a` is some typed value. Keep in
+mind: *`\@TypeOf(f(a))` does not execute `f(a)`*. The catch is: For exactly that case, `a` in 
+`\@TypeOf(f(a))` must be a compile-time known value, since we could return a type that is 
+value-dependent, e.g. `f(some\_int)` returns `bool` for `some\_int < 10` and `YourCrazyStruct` for
+`some\_int > 42`.
 
-On the example on `map`: If our applied function has a compile-time *unknown* return type, we build
-a sequence return type with each element being of the type `\@TypeOf(f(seq[i]))`.
+About the example of `map`: If our applied function has a compile-time *unknown* return type, we 
+build a sequence return type with each element being of the type `\@TypeOf(f(seq[i]))`.
 
-Now you'll understand the following implementation:
+### Choosing natural funcion signatures
 
-### The `map`-function
+Before implementing, we need a coherent interface when calling the functions. The guidelines for 
+this could be defined in relation to what the function produces (returns). The overall premise is 
+to minimise memory allocations and especially copies[[
+    they occur where we don't **directly** see them: Between a function's return value and the 
+    variable it is assigned to, or when passing arguments to a function.
+]]. The specifics are:
 
-I'll just paste it:
+1. For functions producing a *sequence*: We provide pass an input buffer into the function. This 
+   fulfills the concept of "the caller manages the memory". Besides that, if you would want to 
+   create a sequence through a loop, you would also need to define the loop just outside of its 
+   scope to use it afterwards.
+2. For functions producing a *single value*: No input memory address to write on is needed, as the 
+   function value is usually small enough to just be passed through a register.
+3. For any function that returns a *compile-time value*: We can just return it, as no copy will 
+   occur in runtime.
+
+Part of minimising call overhead, to make the use of the functions not inferior to hand-written loops
+is the use of `inline` for the functions. This will be especially important for running function
+sequences in pipelines (discussed later).
+
+I will first start with the `map`-, and `reduce`-functions, as they show the aforementioned concepts
+really good. After that, we will resume with the other functions.
+
+### The map- and reduce-functions
+
+At first, I'll show the simple, iterative implementation of the different `map`-functions: 
 
 ```zig
-// this is for a function f, that has a comptime-evaluated return type.
-// - through this, f can return different types for different xs
-// - for xs as array, it returns [_]f(xs[0])
-// - for xs as a tuple, it constructs a tuple out of everything f returns
-//     for every element in xs
-pub fn map_comptimef(
-    comptime f: anytype,
-    comptime xs: anytype,
-) MapTypeComptime(f, xs) {
-    var ys: MapTypeComptime(f, xs) = undefined;
-    inline for (xs, 0..) |x, i| ys[i] = f(x);
-    return ys;
-}
-
-// this is for a function f with fixed, non-comptime return type
-// - it is same for all xs, so it just returns [_]ReturnType
-pub fn map(
-    comptime inl: bool,
+pub inline fn map(
     comptime f: anytype,
     xs: anytype,
-) MapTypeForXsType(f, @TypeOf(xs)) {
-    var ys: MapTypeForXsType(f, @TypeOf(xs)) = undefined;
-    if (inl) {
+    ys: anytype,
+) void {
+    if (@typeInfo(@TypeOf(xs)) == .@"struct") {
         inline for (xs, 0..) |x, i| ys[i] = f(x);
     } else {
         for (xs, 0..) |x, i| ys[i] = f(x);
     }
+}
+
+// helper for ys buffer definition
+pub fn YsMapType(
+    comptime f: anytype,
+    comptime xs_c: usize,
+) type {
+    return [xs_c]@typeInfo(@TypeOf(f)).@"fn".return_type.?;
+}
+
+// this is for a function f with comptime-evaluated return type
+// - through this, f can return different types for different xs
+// - for xs as array/slice, it returns [_]f(xs[0])
+// - for xs as a tuple, it constructs a tuple out of everything
+//   f returns for every element in xs
+pub inline fn map_comptimef(
+    comptime f: anytype,
+    comptime xs: anytype,
+) YsComptimeMapType(f, xs) {
+    var ys: YsComptimeMapType(f, xs) = undefined;
+    inline for (xs, 0..) |x, i| ys[i] = f(x);
     return ys;
 }
 
-fn MapTypeComptime(comptime f: anytype, comptime xs: anytype) type {
+fn YsComptimeMapType(comptime f: anytype, comptime xs: anytype) type {
     switch (@typeInfo(@TypeOf(xs))) {
-        .array => return [xs.len]@TypeOf(f(xs[0])),
         .@"struct" => {
             const fields = @typeInfo(@TypeOf(xs)).@"struct".fields;
             var types: [fields.len]type = undefined;
@@ -331,24 +380,434 @@ fn MapTypeComptime(comptime f: anytype, comptime xs: anytype) type {
             }
             return @Tuple(&types);
         },
-        else => @compileError("mapping over unsupported type"),
+        else => return [xs.len]@TypeOf(f(xs[0])),
     }
-}
-
-// returns always an array base! unlike its brother above
-fn MapTypeForXsType(comptime f: anytype, comptime XsType: type) type {
-    return [
-        switch (@typeInfo(XsType)) {
-            .array => |a| a.len,
-            .@"struct" => @typeInfo(XsType).@"struct".fields.len,
-            else => @compileError("mapping over unsupported type"),
-        }
-    ](@typeInfo(@TypeOf(f)).@"fn".return_type orelse
-        @compileError("Comptime unknown return type"));
 }
 ```
 
+Let's talk just about what is in need of explanation here, without repeating what I said in the last 
+subsection: To support both sequential types in Zig (arrays and tuples), `map` should provide
+a normal `for`-loop for **slices**[[
+    I did not mention them before, but slices are so-called fat pointers, which is just a packed
+    pointer+length `struct`. Their length is known at runtime and therefore can not be loop unrolled
+    through `inline`.
+]], and an `inline for` for tuples. Unrolled loops are **mandatory** for tuples -- which is the 
+reason why we need to differentiate that case through inspection of `xs`'s type -- and **supported** 
+for all *compile-time sequences* -- which is the reason why we can use `inline for` regardless of the
+type --.
+
+So: `map\_comptimef` does exactly what I spoke about: For functions with compile-time unknown return
+types, it constructs a return type per compile-time known value in the sequence we passed to it.
+The big magic is then done by `YsComptimeMapType` and `YsMapType`, but they are kind of 
+self-explanatory, as Zig's `\@typeInfo` is the key that gets permanently used. Note that `YsMapType`
+is only a helper to do something like this:
+
+```zig
+const xs = [_]i32{ 10, 20, 30 };
+var ys: YsMapType(double, xs.len) = undefined;
+map(f_with_complex_return_type, xs, &ys);
+```
+
+That's it for the basic implementation. During the implementation I noticed, that there are 
+metaprogramming builtins, which can not be passed into the `map` function directly. One of them 
+is of huge interest for me -- especially in the context of Zig --: `\@field`. I often times have the
+need of *extracting fields from an array of `structs`*. You could write your own applied function, 
+that extracts the field you want through pointer arithmetic, but doing it by means of builtins is 
+much more elegant, therefore I added a `map\_field` version taking each `field` out of the elements
+of `xs`, where `x: SomeStructType`:
+
+```zig
+pub inline fn map_field(
+    xs: anytype,
+    comptime field: std.meta.FieldEnum(ChildType(@TypeOf(xs))),
+    ys: anytype,
+) void {
+    if (@typeInfo(@TypeOf(xs)) == .@"struct") {
+        inline for (xs, 0..) |x, i| {
+            ys[i] = @field(x, @tagName(field));
+        }
+    } else {
+        for (xs, 0..) |x, i| {
+            ys[i] = @field(x, @tagName(field));
+        }
+    }
+}
+
+pub inline fn map_field_comptimef(
+    comptime xs: anytype,
+    comptime field: std.meta.FieldEnum(ChildType(@TypeOf(xs))),
+) YsMapFieldType(@TypeOf(xs), field) {
+    var ys: YsMapFieldType(@TypeOf(xs), field) = undefined;
+    inline for (xs, 0..) |x, i| ys[i] = @field(x, @tagName(field));
+    return ys;
+}
+
+fn ChildType(comptime SeqType: type) type {
+    return switch (@typeInfo(SeqType)) {
+        .pointer => |p| p.child,
+        .array => |a| a.child,
+        .@"struct" => @typeInfo(SeqType).@"struct".fields[0].type,
+        else => @compileError("Unsupported type"),
+    };
+}
+
+// We assume here, that XsType is either []SomeStructType, or
+//   .{SomeStructType, SomeStructType, ...} (tuple of struct), 
+//     where all the struct types are the same
+fn YsMapFieldType(
+    comptime XsType: type,
+    comptime fieldenumval: std.meta.FieldEnum(ChildType(XsType)),
+) type {
+    const len = switch (@typeInfo(XsType)) {
+        .array => |a| a.len,
+        .@"struct" => @typeInfo(XsType).@"struct".fields.len,
+        else => @compileError("Unsupported type"),
+    };
+
+    return [len]@FieldType(
+        ChildType(XsType),
+        @tagName(fieldenumval),
+    );
+}
+```
+
+Here, `ChildType` assumes that your passed tuple sequence is homogeneous (of same type for 
+each element), but we could also implement a version for heterogeneous tuples, by handling the
+`comptime field: ...` input in `map\_field` as a bare `\@EnumLiteral()`. I did an "easy" 
+version to not need to explain how enum literals work, go read about them yourself and implement it.
+This version is superior to using `field: \@EnumLiteral()` because it is a bit more type-safe and 
+if you use a language server, you get autocompletion for the field names, which is a nice gimmick.
+
+To see how the `map\_field`-function works, here is its test case[[
+    No more huge code examples, I want to keep the text short, sorry!
+]]:
+
+```zig
+test "map_field" {
+    { // for xs as tuple
+        const Inner = struct { a: i32, b: f64 };
+        const outer = .{
+            Inner{ .a = 1, .b = 2.0 },
+            Inner{ .a = 3, .b = 4.0 },
+        };
+        var ys_a: [2]i32 = undefined;
+        var ys_b: [2]f64 = undefined;
+        map_field(outer, .a, &ys_a);
+        map_field(outer, .b, &ys_b);
+        try std.testing.expectEqualSlices(
+            i32, &[_]i32{ 1, 3 }, &ys_a
+        );
+        try std.testing.expectEqualSlices(
+            f64, &[_]f64{ 2.0, 4.0 }, &ys_b
+        );
+    }
+    { // for xs as array
+        const Inner = struct { a: i32, b: f64 };
+        const outer = [_]Inner{
+            Inner{ .a = 1, .b = 2.0 },
+            Inner{ .a = 3, .b = 4.0 },
+        };
+        var ys_a: [2]i32 = undefined;
+        var ys_b: [2]f64 = undefined;
+        map_field(outer, .a, &ys_a);
+        map_field(outer, .b, &ys_b);
+        try std.testing.expectEqualSlices(
+            i32, &[_]i32{ 1, 3 }, &ys_a
+        );
+        try std.testing.expectEqualSlices(
+            f64, &[_]f64{ 2.0, 4.0 }, &ys_b
+        );
+    }
+    { // for xs as slice
+        const Inner = struct { a: i32, b: f64 };
+        var outer: []Inner = try std.heap.smp_allocator.alloc(
+            Inner, 
+            2,
+        );
+        defer std.heap.smp_allocator.free(outer);
+        outer[0] = Inner{ .a = 1, .b = 2.0 };
+        outer[1] = Inner{ .a = 3, .b = 4.0 };
+        var ys_a: [2]i32 = undefined;
+        var ys_b: [2]f64 = undefined;
+        map_field(outer, .a, &ys_a);
+        map_field(outer, .b, &ys_b);
+        try std.testing.expectEqualSlices(
+            i32, &[_]i32{ 1, 3 }, &ys_a
+        );
+        try std.testing.expectEqualSlices(
+            f64, &[_]f64{ 2.0, 4.0 }, &ys_b
+        );
+    }
+}
+```
+
+As for the `reduce`-function, we should discuss the different inputs in detail to have a clear plan:
+
+1. We only produce a single value -> no sequence buffer for `ys` is needed unlike `map`.
+2. Iterating through the sequence must be through `inline for` for a tuple.
+3. We do not care about `f`'s arguments at all, as long as it accepts two arguments. They may even
+   be of different types. Zig will handle any error during the build-process.
+4. The return type of `f` is important: If `f` has a compile-time known return type, it directly 
+   becomes the return type of `reduce`. If `f` has a compile-time unknown return type, we need to
+   run at compile-time through a full reduce, get it's return type and rerun the same reduce again.
+
+Plan's finished! Let's implement it:
+
+```zig
+// for f with a fixed return type
+pub inline fn reduce(
+    comptime f: anytype,
+    init: anytype,
+    xs: anytype,
+) @typeInfo(@TypeOf(f)).@"fn".return_type.? {
+    var acc: @TypeOf(init) = init;
+    if (@typeInfo(@TypeOf(xs)) == .@"struct") {
+        inline for (xs) |x| acc = f(acc, x);
+    } else {
+        for (xs) |x| acc = f(acc, x);
+    }
+    return acc;
+}
+
+// if f has a comptime-evaluated return type
+//   based on xs
+pub inline fn reduce_comptimef(
+    comptime f: anytype,
+    comptime init: anytype,
+    comptime xs: anytype,
+) YsComptimeReduceType(f, init, xs) {
+    var acc = init;
+    inline for (xs) |x| acc = f(acc, x);
+    return acc;
+}
+
+fn YsComptimeReduceType(
+    comptime f: anytype,
+    comptime init: anytype,
+    comptime xs: anytype,
+) type {
+    var acc = init;
+    inline for (xs) |x| acc = f(acc, x);
+    return @TypeOf(acc);
+}
+```
+
+By applying now a reducer with the signature `f(a: anytype, b: anytype) \@TypeOf(b)`, we can easily
+use `reduce\_comptimef` and a heterogeneously typed tuple without any issue. The reduced value is 
+then of the type of the last element of the sequence.
+
+For the classic `reduce`, we expect runtime-length'd sequences and can not unroll the loop, so we 
+need to use a normal `for` for anything that is not a tuple, which must be unrolled.
+
+### The easy ones: Single-value producers (any, all, find) 
+
+They follow the pattern from `reduce`, but without an additional `\_comptimef`-version, as any 
+passed function always returns `bool`, a compile-time known and fixed type. So if there is a
+compile-time need for them, just run under `comptime any(...)` or `comptime all(...)`. Here is the 
+primitive implementation:
+
+```zig
+pub inline fn any(comptime pred: anytype, xs: anytype) bool {
+    if (@typeInfo(@TypeOf(xs)) == .@"struct") {
+        inline for (xs) |x| if (pred(x)) return true;
+    } else {
+        for (xs) |x| if (pred(x)) return true;
+    }
+    return false;
+}
+// all(...) omitted, pred and return are inverted.
+```
+
+For `find`, there can be again a compile-time version for tuples with different types, as `find`
+would return a different type for each element. The cost of this is obviously that we run the search
+twice, once to find the index and return the element's type, and again to actually return the 
+element.
+
+This trade-off is programatically ugly and costing build-time, but we experience atleast no 
+drawbacks at runtime:
+
+```zig
+// this is for a homogeneously typed seq
+pub inline fn find(
+    comptime pred: anytype,
+    xs: anytype,
+) ?@TypeOf(xs[0]) {
+    if (@typeInfo(@TypeOf(xs)) == .@"struct") {
+        inline for (xs) |x| if (pred(x)) return x;
+    } else {
+        for (xs) |x| if (pred(x)) return x;
+    }
+    return null;
+}
+
+// this is for a heterogeneously typed tuple
+pub inline fn find_comptimef(
+    comptime pred: anytype,
+    xs: anytype,
+) YsComptimeFindType(pred, xs) {
+    inline for (xs) |x| if (pred(x)) return x;
+    return null;
+}
+
+fn YsComptimeFindType(
+    comptime pred: anytype,
+    comptime xs: anytype,
+) type {
+    inline for (xs) |x| if (pred(x)) return ?@TypeOf(x);
+    return @TypeOf(null);
+}
+```
+
+### Sequence producers (filter, take, partition)
+
+Included in this class of functions is also the already shown `map`-function. 
+`filter`, `take` and `partition` differ still from `map`: The length of the sequence that is being
+returned is not known per-se at compile-time, but only through `f` and the input sequence.
+
+Into the `map`-function was additionally an out-`ys`-buffer passed, which will be needed here 
+aswell, but the used length of `ys` will be returned. For compile-time known sequences is just the
+compile-time constructed (wrt. its length) return type used.
+
+```zig
+// runtime version
+pub inline fn filter(
+    comptime pred: anytype,
+    xs: anytype,
+    ys: anytype,
+) usize {
+    var ys_c: usize = 0;
+    if (@typeInfo(@TypeOf(xs)) == .@"struct") {
+        inline for (xs) |x| if (pred(x)) {
+            ys[ys_c] = x;
+            ys_c += 1;
+        };
+    } else {
+        for (xs) |x| if (pred(x)) {
+            ys[ys_c] = x;
+            ys_c += 1;
+        };
+    }
+    return ys_c;
+}
+
+pub inline fn filter_comptimef(
+    comptime pred: anytype,
+    comptime xs: anytype,
+) YsComptimeFilterType(pred, xs) {
+    const ys = comptime blk: {
+        var tmp: YsComptimeFilterType(pred, xs) = undefined;
+        var tmp_c: usize = 0;
+        for (xs) |x| if (pred(x)) {
+            tmp[tmp_c] = x;
+            tmp_c += 1;
+        };
+        break :blk tmp;
+    };
+    return ys;
+}
+
+fn YsComptimeFilterType(
+    comptime pred: anytype,
+    comptime xs: anytype,
+) type {
+    var newlen = 0;
+    if (@typeInfo(@TypeOf(xs)) == .@"struct") {
+        // types could be different -> new tuple
+        var types: [xs.len]type = undefined;
+        inline for (xs) |x| if (pred(x)) {
+            types[newlen] = @TypeOf(x);
+            newlen += 1;
+        };
+        return @Tuple(types[0..newlen]);
+    } else {
+        for (xs) |x| if (pred(x)) {
+            newlen += 1;
+        };
+        return [newlen]@TypeOf(xs[0]);
+    }
+}
+
+// take(...) omitted, returns ys_c/seq early if !pred(x)
+```
+
+As visible, all of the functions follow the same pattern. It could be interesting to take a look at
+`partition`, as it returns two sequences (in compile-time) or two lengths (in runtime):
+
+```zig
+pub inline fn partition(
+    comptime pred: anytype,
+    xs: anytype,
+    ys_true: anytype,
+    ys_false: anytype,
+) struct { usize, usize } {
+    var ys_true_c: usize = 0;
+    var ys_false_c: usize = 0;
+    if (@typeInfo(@TypeOf(xs)) == .@"struct") {
+        inline for (xs) |x| if (pred(x)) {
+            ys_true[ys_true_c] = x;
+            ys_true_c += 1;
+        } else {
+            ys_false[ys_false_c] = x;
+            ys_false_c += 1;
+        };
+    } else {
+        for (xs) |x| if (pred(x)) {
+            ys_true[ys_true_c] = x;
+            ys_true_c += 1;
+        } else {
+            ys_false[ys_false_c] = x;
+            ys_false_c += 1;
+        };
+    }
+
+    return .{ ys_true_c, ys_false_c };
+}
+
+pub inline fn partition_comptimef(
+    comptime pred: anytype,
+    comptime xs: anytype,
+) YsComptimePartitionType(pred, xs) {
+    const ys_true = filter_comptimef(pred, xs);
+    const ys_false = filter_comptimef(struct {
+        pub fn invpred(x: anytype) bool {
+            return !pred(x);
+        }
+    }.invpred, xs);
+
+    return .{ ys_true, ys_false };
+}
+
+fn YsComptimePartitionType(
+    comptime pred: anytype,
+    comptime xs: anytype,
+) type {
+    return struct {
+        // true type
+        YsComptimeFilterType(pred, xs),
+        // on-the-fly constructed false type
+        YsComptimeFilterType(struct {
+            pub fn invpred(x: anytype) bool {
+                return !pred(x);
+            }
+        }.invpred, xs),
+    };
+}
+```
+
+Here, we reused code in the compile-time version, since it does not cost much extra build-time and
+its logic is much cleaner than doing the type construction by hand. Reusing runtime logic would 
+introduce in 99/100 cases here a runtime overhead.
+
+What's special here is the predicate inversion in the compile-time version, which is *really* neat
+and means that we could directly and without any "bogus" invert a really complex predicate through
+technically a "single line of semicolon".
+
+
+### Higher-D-Sequence producers (flat_map, zip)
+
 ## Level 3: Function manipulation
+
+*This is the most interesting part (:*
 
 - Currying (transform n-ary functions into unary functions)
 - Partial application and bind
