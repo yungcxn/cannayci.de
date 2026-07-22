@@ -906,6 +906,7 @@ fn YsComptimeZipType(
     return [len]types[0];
 }
 ```
+
 The tests for `zip` in the repository show in detail what each sequence constellation is "zipped" 
 into. The `flat\_map`-function is a bit more complex, as it needs to flatten the output sequence
 into a 1D-sequence:
