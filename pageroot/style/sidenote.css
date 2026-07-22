@@ -8,8 +8,8 @@ input.margin-toggle {
   white-space: nowrap;
 }
 
+
 .sidenote-number {
-  counter-increment: sidenote-counter;
   color: var(--marker-color);
   cursor: default;
   pointer-events: none;
@@ -17,11 +17,18 @@ input.margin-toggle {
 }
 
 .sidenote-number::after {
-  content: counter(sidenote-counter);
+  content: attr(data-sidenote-count);
   font-size: 0.7em;
   vertical-align: super;
   font-weight: bold;
   margin: 0 0.1em;
+}
+
+.sidenote::before {
+  content: attr(data-sidenote-count) " ";
+  color: var(--marker-color);
+  font-weight: bold;
+  font-size: 0.9em;
 }
 
 .sidenote {
@@ -33,13 +40,6 @@ input.margin-toggle {
   color: var(--note-color);
   /* font-family: -apple-system, system-ui, sans-serif; */
   font-family: var(--body-font);
-}
-
-.sidenote::before {
-  content: counter(sidenote-counter) " ";
-  color: var(--marker-color);
-  font-weight: bold;
-  font-size: 0.9em;
 }
 
 @media (max-width: 1200px){

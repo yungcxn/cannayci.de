@@ -34,7 +34,7 @@ until year 11, I did Java and had known functional programming concepts by use t
 standard library and language features, but going through functional programming how we did 
 presented a new world. We rebuilt algorithms in Racket, and what sticked to me the most was the
 concept of how one can play around with function parameters by @link(
-https://en.wikipedia.org/wiki/Tail\_call, tail-recursion). My interest in this topic went so far, 
+https://en.wikipedia.org/wiki/Tail_call, tail-recursion). My interest in this topic went so far, 
 that I had a project -- to replace my class test --, which involved developing a day care management
 system in Racket. @link(https://github.com/yungcxn/corvey-gbs, Here) is the repository.
 
@@ -230,9 +230,9 @@ We'll look at these functions like:
                           sequence to a single value 
 - `any` and `all`:        check if any or all elements of a sequence satisfy `f(seq[i])`
 - `find`:                 find (the first) element of a sequence that satisfies `f(seq[i])`
-- `flat\_map`:            `map` but flattens the multidimensional sequence at the end to a 1D-seq.
+- `flat_map`:            `map` but flattens the multidimensional sequence at the end to a 1D-seq.
 - `zip`:                  combine parallel sequences into a sequence of "pairs"
-- `take` / `take\_while`: while `f(seq[i])` is true, add `seq[i]` to the result sequence
+- `take` / `take_while`: while `f(seq[i])` is true, add `seq[i]` to the result sequence
 - `partition`:            split a sequence into two subsequences based predicate `f(seq[i])`
 
 The functions can be split up into three categories with regards to what they return: (1)
@@ -289,7 +289,7 @@ fn f(a: anytype) @TypeOf(a) {
 }
 ```
 
-When we now run `\@TypeOf(f).\@"fn".return\_type`, the function's return type is `null` since for 
+When we now run `\@TypeOf(f).\@"fn".return_type`, the function's return type is `null` since for 
 `f(3.0)` we get a float type, and for `f(3)` some integer type. Therefore, we need to distinguish
 the case, where we construct some type out of some `f`, where `f` has a "solid, compile-time known
 return type", and the case, where `f` has a "compile-time unknown return type"[[
@@ -297,11 +297,11 @@ return type", and the case, where `f` has a "compile-time unknown return type"[[
     and dependent on the input type. Regardless of this detail, I will refer to it as "unknown",
     since from user-perspective, the reflection system returns `null` for such.
 ]]. Luckily we have a solution for the second one: Instead of running 
-`\@TypeOf(f).\@"fn".return\_type`, we do `\@TypeOf(f(a))...`, where `a` is some typed value. Keep in
+`\@TypeOf(f).\@"fn".return_type`, we do `\@TypeOf(f(a))...`, where `a` is some typed value. Keep in
 mind: *`\@TypeOf(f(a))` does not execute `f(a)`*. The catch is: For exactly that case, `a` in 
 `\@TypeOf(f(a))` must be a compile-time known value, since we could return a type that is 
-value-dependent, e.g. `f(some\_int)` returns `bool` for `some\_int < 10` and `YourCrazyStruct` for
-`some\_int > 42`.
+value-dependent, e.g. `f(some_int)` returns `bool` for `some_int < 10` and `YourCrazyStruct` for
+`some_int > 42`.
 
 About the example of `map`: If our applied function has a compile-time *unknown* return type, we 
 build a sequence return type with each element being of the type `\@TypeOf(f(seq[i]))`.
@@ -331,7 +331,7 @@ sequences in pipelines (discussed later).
 I will first start with the `map`-, and `reduce`-functions, as they show the aforementioned concepts
 really good. After that, we will resume with the other functions.
 
-### The map- and reduce-functions
+### The `map`- and `reduce`-functions
 
 At first, I'll show the simple, iterative implementation of the different `map`-functions: 
 
@@ -396,7 +396,7 @@ reason why we need to differentiate that case through inspection of `xs`'s type 
 for all *compile-time sequences* -- which is the reason why we can use `inline for` regardless of the
 type --.
 
-So: `map\_comptimef` does exactly what I spoke about: For functions with compile-time unknown return
+So: `map_comptimef` does exactly what I spoke about: For functions with compile-time unknown return
 types, it constructs a return type per compile-time known value in the sequence we passed to it.
 The big magic is then done by `YsComptimeMapType` and `YsMapType`, but they are kind of 
 self-explanatory, as Zig's `\@typeInfo` is the key that gets permanently used. Note that `YsMapType`
@@ -413,7 +413,7 @@ metaprogramming builtins, which can not be passed into the `map` function direct
 is of huge interest for me -- especially in the context of Zig --: `\@field`. I often times have the
 need of *extracting fields from an array of `structs`*. You could write your own applied function, 
 that extracts the field you want through pointer arithmetic, but doing it by means of builtins is 
-much more elegant, therefore I added a `map\_field` version taking each `field` out of the elements
+much more elegant, therefore I added a `map_field` version taking each `field` out of the elements
 of `xs`, where `x: SomeStructType`:
 
 ```zig
@@ -473,12 +473,12 @@ fn YsMapFieldType(
 
 Here, `ChildType` assumes that your passed tuple sequence is homogeneous (of same type for 
 each element), but we could also implement a version for heterogeneous tuples, by handling the
-`comptime field: ...` input in `map\_field` as a bare `\@EnumLiteral()`. I did an "easy" 
+`comptime field: ...` input in `map_field` as a bare `\@EnumLiteral()`. I did an "easy" 
 version to not need to explain how enum literals work, go read about them yourself and implement it.
 This version is superior to using `field: \@EnumLiteral()` because it is a bit more type-safe and 
 if you use a language server, you get autocompletion for the field names, which is a nice gimmick.
 
-To see how the `map\_field`-function works, here is its test case[[
+To see how the `map_field`-function works, here is its test case[[
     No more huge code examples, I want to keep the text short, sorry!
 ]]:
 
@@ -593,15 +593,15 @@ fn YsComptimeReduceType(
 ```
 
 By applying now a reducer with the signature `f(a: anytype, b: anytype) \@TypeOf(b)`, we can easily
-use `reduce\_comptimef` and a heterogeneously typed tuple without any issue. The reduced value is 
+use `reduce_comptimef` and a heterogeneously typed tuple without any issue. The reduced value is 
 then of the type of the last element of the sequence.
 
 For the classic `reduce`, we expect runtime-length'd sequences and can not unroll the loop, so we 
 need to use a normal `for` for anything that is not a tuple, which must be unrolled.
 
-### The easy ones: Single-value producers (any, all, find) 
+### The easy ones: Single-value producers (`any`, `all`, `find`) 
 
-They follow the pattern from `reduce`, but without an additional `\_comptimef`-version, as any 
+They follow the pattern from `reduce`, but without an additional `_comptimef`-version, as any 
 passed function always returns `bool`, a compile-time known and fixed type. So if there is a
 compile-time need for them, just run under `comptime any(...)` or `comptime all(...)`. Here is the 
 primitive implementation:
@@ -658,7 +658,7 @@ fn YsComptimeFindType(
 }
 ```
 
-### Sequence producers (filter, take, partition)
+### Sequence producers (`filter`, `take`, `partition`)
 
 Included in this class of functions is also the already shown `map`-function. 
 `filter`, `take` and `partition` differ still from `map`: The length of the sequence that is being
@@ -814,7 +814,7 @@ and means that we could directly and without any "bogus" invert a really complex
 technically a "single line of semicolon".
 
 
-### Higher-D-Sequence producers (flat_map, zip)
+### Higher-D-Sequence producers (`flat_map`, `zip`)
 
 Let's start with `zip`: I will introduce a simple version, that just takes two sequences and returns
 a sequence of pairs. Any input sequence should be accepted, but it is assumed that the returned 
@@ -908,14 +908,14 @@ fn YsComptimeZipType(
 ```
 
 The tests for `zip` in the repository show in detail what each sequence constellation is "zipped" 
-into. The `flat\_map`-function is a bit more complex, as it needs to flatten the output sequence
+into. The `flat_map`-function is a bit more complex, as it needs to flatten the output sequence
 into a 1D-sequence:
 
-As `flat\_map` is a combination of `map` and `flatten`, we can reuse `map` and introduce a `flatten`
+As `flat_map` is a combination of `map` and `flatten`, we can reuse `map` and introduce a `flatten`
 operation, but such an implementation would be inferior to a direct implementation with regards to
 memory usage -- especially because of the need of having a temporary buffer for the `map`-result
 that is yet to be flattened. Combining function operations is about to be discussed in the next
-"functional programming level", so there will be no drawbacks through a direct `flat\_map`. Here is 
+"functional programming level", so there will be no drawbacks through a direct `flat_map`. Here is 
 the implementation:
 
 ```zig
@@ -1023,7 +1023,7 @@ fn YsComptimeFlatMapType(
 }
 ```
 
-There are many other functions that could be implemented, e.g. `cycle`, `repeat`, `group\*`, ...,
+There are many other functions that could be implemented, e.g. `cycle`, `repeat`, `group*`, ...,
 but that's enough for now! Sorry for going so much into details, but through this I showed that the
 commonly used functional programming operations can easily -- and in an efficient manner -- be
 implemented in Zig.
