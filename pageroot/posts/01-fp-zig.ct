@@ -730,8 +730,19 @@ fn YsComptimeFilterType(
 // take(...) omitted, returns ys_c/seq early if !pred(x)
 ```
 
-As visible, all of the functions follow the same pattern. It could be interesting to take a look at
-`partition`, as it returns two sequences (in compile-time) or two lengths (in runtime):
+As visible, all of the functions follow the same pattern. A little detail must still be discussed:
+`filter` here returns just the length of the new sequence, and it would be much more natural to 
+Zig to return a slice of the `ys`-buffer, so we could directly use it to e.g. iterate through or
+pass it to another function. The problem is that not always a whole sequence is needed and returning
+a slice is atleast 16 bytes[[
+    for a 64-bit architecture: 64-bit pointer + 64-bit length.
+]], which is more than estimated 8 bytes for the length. Besides that: The pointer to `ys` is 
+already available and returning it again would be redundant. Additionally, we would need to
+construct a new type for tuple-`ys`, which would make the implementation a bit more complex. 
+Therefore, I decided to leave it as it is.
+
+About the next function: It could be interesting to take a look at `partition`, as it returns two 
+sequences (in compile-time) or two lengths (in runtime):
 
 ```zig
 pub inline fn partition(
@@ -804,6 +815,217 @@ technically a "single line of semicolon".
 
 
 ### Higher-D-Sequence producers (flat_map, zip)
+
+Let's start with `zip`: I will introduce a simple version, that just takes two sequences and returns
+a sequence of pairs. Any input sequence should be accepted, but it is assumed that the returned 
+sequence has a tuple type as its child. The supported input sequence types, aswell as the outer
+type of the output sequence can be any of the three basic sequence types. Therefore, we need more
+complexity to handle all different cases on when to require loop unrolling and when not. 
+
+For example: A single tuple anywhere as input or output sequence requires loop unrolling, whereas
+one runtime-length'd slice would require a normal **un-unrolled** loop. The implementation is as
+follows:
+
+```zig
+pub inline fn zip(
+    as: anytype,
+    bs: anytype,
+    ab_s: anytype,
+) void {
+    const As = @TypeOf(as);
+    const Bs = @TypeOf(bs);
+    // child, bc. ab_s is passed by reference (pointer):
+    const ABs = @typeInfo(@TypeOf(ab_s)).pointer.child;
+
+    const needs_inline = if (@typeInfo(As) == .@"struct" or
+        @typeInfo(Bs) == .@"struct" or
+        @typeInfo(ABs) == .@"struct") true else false;
+
+    if (comptime needs_inline) {
+        const len = comptime blk: {
+            for (.{ As, Bs, ABs }) |T| {
+                if (comptime_len(T)) |l| break :blk l;
+            }
+            @compileError("error: tuple + runtime slice");
+        };
+
+        inline for (0..len) |i| {
+            ab_s[i][0] = as[i];
+            ab_s[i][1] = bs[i];
+        }
+    } else {
+        for (0..ab_s.len) |i| {
+            ab_s[i][0] = as[i];
+            ab_s[i][1] = bs[i];
+        }
+    }
+}
+
+// helper for distinguishing loop-unrollable and non-unrollables
+fn comptime_len(comptime T: type) ?comptime_int {
+    return switch (@typeInfo(T)) {
+        .@"struct" => |s| if (s.is_tuple) s.fields.len else null,
+        .array => |a| a.len,
+        else => null,
+    };
+}
+
+pub inline fn zip_comptimef(
+    comptime as: anytype,
+    comptime bs: anytype,
+) YsComptimeZipType(as, bs) {
+    comptime var ab_s: YsComptimeZipType(as, bs) = undefined;
+    inline for (ab_s, 0..) |_, i| {
+        ab_s[i][0] = as[i];
+        ab_s[i][1] = bs[i];
+    }
+    return ab_s;
+}
+
+fn YsComptimeZipType(
+    comptime as: anytype,
+    comptime bs: anytype,
+) type {
+    const len = if (@typeInfo(@TypeOf(as)) == .@"struct")
+        @typeInfo(@TypeOf(as)).@"struct".fields.len
+    else
+        as.len;
+
+    var types: [len]type = undefined;
+    inline for (0..len) |i| {
+        types[i] = struct { @TypeOf(as[i]), @TypeOf(bs[i]) };
+    }
+
+    // if all rows are equally typed,
+    //   -> array for smaller type info
+    inline for (types) |t| {
+        if (t != types[0]) {
+            return @Tuple(&types);
+        }
+    }
+    return [len]types[0];
+}
+```
+The tests for `zip` in the repository show in detail what each sequence constellation is "zipped" 
+into. The `flat\_map`-function is a bit more complex, as it needs to flatten the output sequence
+into a 1D-sequence:
+
+As `flat\_map` is a combination of `map` and `flatten`, we can reuse `map` and introduce a `flatten`
+operation, but such an implementation would be inferior to a direct implementation with regards to
+memory usage -- especially because of the need of having a temporary buffer for the `map`-result
+that is yet to be flattened. Combining function operations is about to be discussed in the next
+"functional programming level", so there will be no drawbacks through a direct `flat\_map`. Here is 
+the implementation:
+
+```zig
+pub inline fn flat_map(
+    xs: anytype,
+    f: anytype,
+    ys: anytype,
+) void {
+    const Xs = @TypeOf(xs);
+    const Outp = @typeInfo(@TypeOf(ys)).pointer.child;
+
+    const needs_inline = @typeInfo(Xs) == .@"struct" or
+        @typeInfo(Xs) == .array;
+
+    if (comptime needs_inline) {
+        const len = comptime_len(Xs).?;
+
+        comptime var idx: usize = 0;
+        inline for (0..len) |i| {
+            const r = f(xs[i]);
+            inline for (r, 0..) |v, j| {
+                ys[idx + j] = v;
+            }
+            idx += r.len;
+        }
+    } else {
+        if (@typeInfo(Outp) == .@"struct") {
+            @compileError("slice -> tuple forbidden");
+        }
+        var idx: usize = 0;
+        for (0..xs.len) |i| {
+            const r = f(xs[i]);
+            for (r, 0..) |v, j| {
+                ys[idx + j] = v;
+            }
+            idx += r.len;
+        }
+    }
+}
+
+pub fn YsFlatMapType(
+    comptime f: anytype,
+    comptime xs_c: usize,
+) type {
+    const ReturnedSeqType = @typeInfo(@TypeOf(f)).@"fn".return_type.?;
+    switch (@typeInfo(ReturnedSeqType)) {
+        .array => |a| return [xs_c * a.len]a.child,
+        .@"struct" => |s| {
+            var types: [xs_c * s.fields.len]type = undefined;
+            inline for (0..xs_c) |i| {
+                for (s.fields, 0..) |field, j| {
+                    types[i * s.fields.len + j] = field.field_type;
+                }
+            }
+            return @Tuple(&types);
+        },
+        else => @compileError("f must return a tuple or array"),
+    }
+}
+
+pub inline fn flat_map_comptimef(
+    comptime xs: anytype,
+    comptime f: anytype,
+) YsComptimeFlatMapType(xs, f) {
+    const len = comptime (comptime_len(@TypeOf(xs)) orelse xs.len);
+    comptime var ys: YsComptimeFlatMapType(xs, f) = undefined;
+    comptime var idx = 0;
+    inline for (0..len) |i| {
+        const r = comptime f(xs[i]);
+        inline for (r, 0..) |v, j| {
+            ys[idx + j] = v;
+        }
+        idx += r.len;
+    }
+    return ys;
+}
+
+fn YsComptimeFlatMapType(
+    comptime xs: anytype,
+    comptime f: anytype,
+) type {
+    const len = comptime_len(@TypeOf(xs)) orelse xs.len;
+
+    var total: usize = 0;
+    inline for (0..len) |i| {
+        total += f(xs[i]).len;
+    }
+
+    var types: [total]type = undefined;
+    var idx: usize = 0;
+    inline for (0..len) |i| {
+        const r = f(xs[i]);
+        inline for (r) |v| {
+            types[idx] = @TypeOf(v);
+            idx += 1;
+        }
+    }
+
+    inline for (types) |t| {
+        if (t != types[0]) {
+            return @Tuple(&types);
+        }
+    }
+    return [total]types[0];
+}
+```
+
+There are many other functions that could be implemented, e.g. `cycle`, `repeat`, `group\*`, ...,
+but that's enough for now! Sorry for going so much into details, but through this I showed that the
+commonly used functional programming operations can easily -- and in an efficient manner -- be
+implemented in Zig.
 
 ## Level 3: Function manipulation
 
