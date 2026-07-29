@@ -32,7 +32,8 @@ main {
 
 /* LaTeX paragraph indent */
 p:not([lang="ar"]) + p:not([lang="ar"]),
-p[lang="ar"] + p[lang="ar"] {
+p[lang="ar"] + p[lang="ar"],
+blockquote + blockquote {
   text-indent: 1.5em;
   margin-top: -1em;
 }

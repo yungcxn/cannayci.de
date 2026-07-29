@@ -1,0 +1,7 @@
+@import(parts/pre.ct)
+@deferimport(parts/post.ct)
+
+# My global-galactic to-do list
+
+- 6502 cpu emulator, then extend for full NES emulation
+- C transpiler wrt modern compiler techniques (e.g. streamed incremental compilation)

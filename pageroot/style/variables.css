@@ -38,7 +38,7 @@
   --header-shadow: none;
   --toc-active: #B3A3E0;
 
-  --main-width: 900px;  
+  --main-width: 800px;  
   --main-center-at: 1200px;
   --main-offset: -150px;
   --gap: 2em;
@@ -54,7 +54,7 @@
   );
 
   --note-color: #666;
-  --marker-color: var(--link-hover);
+  --marker-color: #5A3FA8;
 
   /* Prism syntax theme (dark) */
   --code-text: #C9C3D6;

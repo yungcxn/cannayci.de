@@ -6,21 +6,19 @@
 In this post, I want to share the ways of functional programming in Zig. I am currently -- and I 
 mention this always whenever I get a chance -- a huge fan of the Zig programming language, and want 
 to experiment with it as much as possible. Through Zig's mighty compile-time metaprogramming, one 
-can get absurdly creative.
+can get absurdly creative. 
 
-For somebody that does not know Zig: It is described as a general-purpose and simple (systems) 
-programming language. I'd classify it as what a C-developer would want with regards to compile-time
-expressibility, but there is of course much more to it and my view on it's superiorities only 
-scrapes the surface.
+For someone who does not know Zig, it is described as a general-purpose and simple (systems) 
+programming language. I'd classify it as what a C developer would want with regards to compile-time 
+expressibility, but there is, of course, much more to it, and my view on its superiorities only 
+scrapes the surface. 
 
-Before jumping into this, I want to mention that I will be speaking about functional programming
-mechanics, which are disregarding Zig's philosopy, which can be directly seen on their @link(
-https://ziglang.org/, homepage). The most meaningful of those that will be violated is the "No 
-hidden control flow" principle, through e.g. something like a `map`-function. I therefore highly
-recommend to disregard those principles shown here, that violate these guidelines.
+Before jumping into this, I want to mention that I will be speaking about functional programming 
+mechanics, which disregard Zig's philosophy, as can be directly seen on its @link(
+https://ziglang.org/, homepage). The most significant principle that will be violated is "No hidden 
+control flow", for instance, through something like a `map` function. I therefore highly recommend 
+disregarding any principles shown here that violate these guidelines. 
 
-That being said: Here comes a small personal story on why I want to do this experiment, and what I 
-use as a reference for for porting functional programming concepts into Zig.
 
 ## My personal "Why?!"
 
@@ -147,7 +145,6 @@ type. This feature will be abused much more with the next sections and is crucia
     operates on numbers, can be used on any any numeric type. There are many examples, I guess it 
     would be harder to find a language that does not support this.
 ]]
-
 
 ### 3/3: Closures and anonymous functions
 

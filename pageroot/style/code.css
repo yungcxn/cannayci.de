@@ -20,10 +20,9 @@ code:not(p code):not(li code):not(td code):not(figcaption code):not(a code):not(
   padding: clamp(0.65em, 2vw, 1em);
   overflow-x: auto;
   border-radius: 6px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  white-space: pre;
   font-family: var(--mono-font);
-  font-size: clamp(0.9em, 1.5vw, 0.95em);
+  font-size: 0.8em;
   max-width: 100%;
   box-sizing: border-box;
   margin: var(--space-sm) 0;
@@ -34,19 +33,17 @@ code:not(p code):not(li code):not(td code):not(figcaption code):not(a code):not(
 pre[class*="language-"] {
   border-radius: 6px;
   margin: var(--space-sm) 0;
-  font-size: clamp(0.9em, 1.5vw, 0.95em);
+  font-size: 0.8em;
   max-width: 100%;
   box-sizing: border-box;
-  white-space: pre-wrap !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
+  overflow-x: auto;
+  white-space: pre !important;
   text-align: left !important;
 }
 
 pre[class*="language-"] code {
   font-family: var(--mono-font);
-  white-space: pre-wrap !important;
-  word-wrap: break-word !important;
+  white-space: pre !important;
   text-align: left !important;
 }
 
@@ -55,7 +52,7 @@ pre {
   padding: 0;
   background: none;
   border-radius: 0;
-  overflow: visible;
+  overflow-x: auto;
 }
 pre code { display: block; }
 
@@ -65,8 +62,7 @@ pre[class*="language-"].line-numbers {
 }
 
 pre[class*="language-"].line-numbers > code {
-  white-space: pre-wrap !important;
-  word-wrap: break-word !important;
+  white-space: pre !important;
 }
 
 .line-numbers .line-numbers-rows {
