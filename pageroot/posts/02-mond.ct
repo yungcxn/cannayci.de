@@ -1,0 +1,203 @@
+@import(parts/pre.ct)
+@deferimport(parts/post.ct)
+
+!blkdef:center,<div style="display: flex; justify-content: center; align-items: center; flex-direction: column; text-align: center;">,</div>
+
+# First plans on my prog. lang. mond
+
+This post is dedicated to my first plans on my own programming language `mond`. Its name stems from
+my middle school project, where I carved out a simple syntax for my own compiler, which I did not
+build sadly.
+
+The name `mond` (German for "moon") should hint to the primary design philosophy of the language:
+*Clarity*. This is expressed through the following points:
+
+1. Syntactical and semantical clarity is in my opinion best achieved by providing a user 
+   experience that is close to the user's **intuition**. The user should be able to intuitively 
+   understand language principles and use them.
+2. Code should be small and expressive, but unambiguous, unlike C++.
+3. It should be general-purpose and its application area should correspond to the one of C.
+
+From my point of view, building any form of "text translators", let them be interpreters, 
+transpilers, classical compilers... **is easy**. The design goals and challenges are what makes building
+them hard and interesting.
+
+Therefore I choose to focus heavily on data oriented programming techniques and performance 
+optimizations, even if there will be short-comings with regards to them due to my limited knowledge
+on compiler theory yet. I hope to fill this gap on-the-fly. 
+
+## Architectural roadmap
+
+At first, I try to build what I directly know by heart and then dig deeper into the component design
+and implementation of what I currently do not know of in an adequate manner. This is a good way to
+start, since I postpone unpractical learning phases and can directly start with "construction-work".
+
+When looking into classical compiler architecture, we will find this:
+
+@center:
+    `Lexer  --(Tokens)-->  Parser  --(AST)-->  Sem.-Analyzer  --(IR)-->  Code-Gen.`
+
+Code-Generation must be postponed due to my lack of knowledge. Because of that I will generate 
+C-code *for now*. The reasons for this choice are:
+
+1. I know C.
+2. I would not generate complex C code with modern features to offload semantic analysis to the C
+   compiler, but rather generate *correct and as-primitive-as-possible* C code. With the advancement
+   of my semantic analysis, the generated C code will become more and more primitive, which would 
+   then allow me to transition to machine code seemlessly.
+3. Due to the last point: Semantic Analysis and "code-lowering" are not restricted by prefering C
+   over machine code output.
+4. A (primitive) C compiler backend would allow for direct interoperability with C code already in 
+   the earliest stages of the language's development.
+5. I do not need to dig into platform specifics for now.
+
+The main contra point of this approach is build-time, as this contradicts my performance goal, but
+that point is good for having the motivation of later building a proper machine code generator.
+
+## Language syntax and features
+
+- `REXPR`: what is assignable to a var and on the right side of `=`
+- `LEXPR`: what is assigned to, typically `LEXPR = REXPR` -> `LTYPE LNAME = REXPR`
+
+Examples are the best way to demonstrate them:
+
+```
+$import("somelib")
+
+# fixed func signature
+i32 add_i32(i32 a, i32 b) {
+    return a + b
+}
+
+# induced but fixed func signature
+add_i32_induced(i32 a, i32 b) {
+    return a + b
+}
+
+# yet to be induced, template func signature
+add_induced(a, b) {
+    return a + b
+}
+
+# "void" does not exist, it's always induced
+my_void_func() {
+    print("Hello, world!")
+}
+
+# first set of parentheses is comptime, second set is runtime
+mytemplfunc(type T, bool add_or_sub)(T a, T b) {
+    constif (add_or_sub) {
+        return a + b
+    } constelse {
+        return a - b
+    }
+}
+
+type Person {
+    u8[10] name
+    i32    age = 18
+    *u8    address
+}
+
+type Point(type A, type B) {
+    A x
+    B y
+}
+
+interface Iterable(type ElementType) {
+    bool has_next($SubType)
+    ElementType next($SubType)
+}
+
+// type def through alias
+type opt_u8 = $Optional(u8, 0xFF)
+type err_u8 = $Error(u8, 0xFF)
+type err_opt_u8 = $Error($Optional(u8, 0xFE), 0xFF)
+
+type ByteStream<Iterable(u8)> {
+    *u8 buf
+    u32 cursor
+
+    $init(*u8 in_buf) {
+        return ByteStream{
+            .buf = in_buf,
+            .cursor = 0
+        }
+    }
+
+    $deinit() {} # could be left out
+
+    pub opt_u8 pop(*ByteStream bs) {
+        if (bs.cursor >= bs.buf.len) {
+            return null
+        }
+
+        defer bs.cursor += 1
+        return bs.buf[bs.cursor]
+    }
+
+    pub bool has_next(*ByteStream bs) {
+        return bs.cursor < bs.buf.len
+    }
+
+    pub u8 next(*ByteStream bs) {
+        return bs.buf[bs.cursor]
+    }
+}
+
+# type alias
+type Point2D = Point(i32, i32)
+# func alias, not templated
+u32(u32, u32) add = mytemplfunc(u32, true)
+
+$main() {
+    u8[2] my_str  = "hi"  # h i     type: u8[2]
+    u8[]  my_str2 = "hi"  # h i     type: u8[2]
+    &u8   c_str   = "hi"  # h i \0  type: pointer to constant u8(s)
+    induced_str   = "hi"  # h i     type: u8[2]
+
+    println(c_str)
+}
+```
+
+Lambdas:
+
+```
+### all lambda cases:
+# everything given
+u32(u32, u32) add_lambda1  = u32 (u32 a, u32 b) return a + b
+# return type induced by ltype -> fixed signature
+u32(u32, u32) add_lambda2  = (u32 a, u32 b) return a + b
+# return type induced by param types -> fixed signature
+add_lambda2  = (u32 a, u32 b) return a + b
+# return and param types induced by ltype -> fixed signature
+u32(u32, u32) add_lambda3  = (a, b) return a + b
+# ltype induced -> fixed signature
+add_lambda3  = u32 (u32 a, u32 b) return a + b
+# ltype and rtype rettype induced -> fixed signature
+add_lambda3  = (u32 a, u32 b) return a + b
+# not inducable -> template
+lambda_templ = (a, b) return a + b
+# alias of templated -> fixed signature
+u32(u32, u32) add_lambda4  = lambda_templ
+# alias of untemplated -> still template
+lambda_templ2 = lambda_templ
+
+u32(u32, u32) add_lambda5  = (a, b) {
+    side_effect(a,b)
+    return a + b
+}
+```
+
+### Predefined funcs/vars
+
+- Preset by `$`
+- return type is induced by compiler
+
+
+### Overall nodes
+
+- rexprs can get their type induced by lexpr type (ltype)
+- I want functional operators as keywords for complex inline control flow :) 
+- inl: inline func
+- pub: public field or func

@@ -1,6 +1,93 @@
 @import(parts/pre.ct)
 @deferimport(parts/post.ct)
 
-# Motivation, and: Screw Markdown!
+# Motivation, ct2html and: Screw Markdown
 
-(Written right now, slow down)
+I want to have a place where my notes and thoughts are gathered in a central place, even if they are
+not really meant for public space, since I do not intend to have readers besides me and maybe some 
+family member I want to send some text to.
+
+I love @link(https://de.wikipedia.org/wiki/LaTeX, `latex`), which I got introduced to in university,
+and while others found `latex` to be extremely overcomplicated and used other alternative like 
+@link(https://en.wikipedia.org/wiki/Typst, `typst`) or just wrote in their ugly font on their 
+tablet, I defined my own math commands and had fun spamming formulas looking like sentences in 
+@link(https://en.wikipedia.org/wiki/Nubian_languages, Nubean) through something like `\x`.
+
+`latex` may be pleasing for PDF-articles, or little books, but for even smaller texts like articles,
+where you would not share big compositions of settings-files for single article files.
+
+Because of that, thinner and much "settings-less" is @link(https://de.wikipedia.org/wiki/Markdown, 
+Markdown), but it lacks what I love: Commands.
+
+Instead of (A): Using some Markdown-dialect, or (B) another DSL for writing small articles, I came 
+up with my @link(https://github.com/yungcxn/ct2html, `ct2html`) project, which takes my own DSL and 
+generates @link(https://de.wikipedia.org/wiki/Hypertext_Markup_Language, HTML) out of it. `ct` 
+(`c`an's `t`ext) is a Markdown-like language with commands and other quirks to fulfill this need.
+It is a really fun opportunity to experiment with @link(https://ziglang.org/, `zig`) -- my new love 
+after playing with `C` for some serious time.
+
+Through these motivations I can mix in my profession (platform and DevOps engineering) to setup a 
+bare VPS, my hobby (coding) to build a HTML-Generator and my goal (to have a space for my notes) 
+alltogether.
+
+## `ct2html`
+
+While compilers follow usually a strict architecture of 
+
+1. Lexing
+2. Parsing
+3. Semantic Analysis
+4. Generation
+
+I could skip certain steps due to reduced complexity of the language's grammar and the syntactical
+"closeness" to HTML. Lexing and Parsing is merged into one step generating a flat abstract syntax
+tree which holds nodes with string views to the original source text. The next step is directly 
+generating the HTML according to the nodes. Semantic correctness is "kinda-checked" through the 
+parsing step, as invalid syntax will not be parsed correctly into a valid AST-node.
+
+For flexibility, a preprocessor is preset to allow importing and merging files together, which 
+behaves much like the C-preprocessor. This is the overall structure:
+
+@img: 
+    ../../files/00-motivation/ct2html-architecture.png,
+    100%,
+    Software architecture of `ct2html` as of July 2026.
+
+I did not have the need of really going into the fine-tuning of runtime-optimization, but having a
+reasonable generation time is important for my need of dynamically generating the HTML-pages. I 
+wanted to directly change files on the server and have the changes reflected immediately, so waiting 
+a second or two would be bad for such a trivial algorithm.
+
+Therefore, going through the three steps of preprocesing, parsing and generating, an abstract view
+on the memory operations would look like this:
+
+1. `Preprocessor` writes input files into a single buffer (linear)
+2. `Parser` reads the buffer and generates nodes with string views to that buffer (no allocation).
+   Nodes are lineraly pushed into the flat AST-array, and each new tree-layer is also linearly 
+   iterated through to generate the next layer of nodes (`O(2n) = O(n)`, linear)
+3. `Generator` reads nodes linearly and writes into output buffer (linear)
+
+There might be small allocations for specific cases, like when passing an error message to the user,
+but these are insignificant for the overall performance.
+
+## Why screw Markdown (+ unknown tools)?
+
+If there is a need for a language or a tool that would require you to learn it, while it only 
+delivers a skillset over a single use-case, it is not worth the time at all. Having a 
+single-digit count of hours of investment could be turned into double or triple digit hours of 
+investment for a `999_999_999x` return.
+
+An engineer of today *is in need* of projects that he can work on, and working with some other guy's
+site generator tool is lazy.
+
+Keep in mind that your punishment for using someone else's tool is that you now rely on his 
+features, and in case you need something unsupported, you now either hack your way through it, 
+resulting in a unsatisfactory-to-look-at solution, or you fork the project and read through the
+mediocre-at-best codebase, which could eat up **a lot** of your time.
+
+Think about me: I had a need and really no clue of compiler-construction, so I watched a video about
+it, did a really bad job at first, but rewrote some architectural components and now have a working
+tool for this site. I not only had fun, but could also use this to learn Zig. And another additional
+effect from this project on me is that I am now really interested in compilers and want to build "a
+real one". 
+

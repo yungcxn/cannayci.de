@@ -49,6 +49,12 @@ And before that -- in my school days -- I did Minecraft modifications day-and-ni
 )
 
 @post(  
+    /posts/02-mond.ct,
+    First plans on my prog. lang. `mond`,
+    July 12, 2026
+)
+
+@post(  
     /posts/01-fp-zig.ct,
     Functional Programming in Zig,
     July 17, 2026
@@ -56,6 +62,6 @@ And before that -- in my school days -- I did Minecraft modifications day-and-ni
 
 @post(  
     /posts/00-motivation.ct,
-    Motivation\, `ct2html` and: Screw Markdown!,
+    Motivation\, `ct2html` and: Screw Markdown,
     July 12, 2026
 )
